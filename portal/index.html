@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#003D8C">
+<title>My Solar &amp; Battery · Digital Utility</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+:root{
+  --brand:#0070F2;--brand-bg:#EBF5FE;--brand-border:#B8D7F5;--brand-dark:#003D8C;
+  --pos:#256F3A;--pos-bg:#E8F5EA;--pos-border:#B6D98C;
+  --warn:#E76500;--warn-bg:#FFF4E6;--warn-border:#F5D44E;
+  --neutral:#556B82;--neutral-bg:#EFF1F2;
+  --surf:#FFFFFF;--bg:#F5F8FA;--bg2:#FAFBFC;
+  --bdr:#E5E5E5;--bdr-lt:#F0F1F2;
+  --txt:#1D2D3E;--txt2:#556B82;--txt3:#8396A8;--link:#0064D9;
+  --shadow:0 1px 4px rgba(29,45,62,.05);
+  --shadow-md:0 4px 16px rgba(29,45,62,.08);
+  --shadow-lg:0 8px 32px rgba(29,45,62,.12);
+  --rs:8px;--rm:12px;--rl:16px;--pill:100px;
+  --transition:all .25s cubic-bezier(.4,0,.2,1);
+  --solar:#F5A623;--battery:#7B6FF0;--money:#256F3A;--leaf:#2E9D5C;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{height:100%}
+body{
+  font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  background:var(--bg);
+  color:var(--txt);
+  overflow:hidden;
+}
+
+.mono{font-family:'IBM Plex Mono',monospace;font-weight:600}
+
+/* ============ APP CONTAINER ============ */
+.frame{
+  width:100%;height:100%;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+
+/* ============ STATUS BAR (mobile-style) ============ */
+/* ============ APP HEADER ============ */
+.app-hdr{
+  background:var(--surf);
+  padding:14px 18px;
+  border-bottom:1px solid var(--bdr-lt);
+  flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+  /* Respect iOS safe area for browsers/PWA */
+  padding-top:max(14px, env(safe-area-inset-top));
+}
+.app-hdr-back{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--brand);font-size:18px;
+  background:transparent;border:none;cursor:pointer;
+  transition:var(--transition);
+}
+.app-hdr-back:active{background:var(--brand-bg)}
+.app-hdr-back svg{width:20px;height:20px}
+.app-hdr-title{
+  flex:1;text-align:center;
+  font-size:15px;font-weight:600;color:var(--txt);
+  letter-spacing:-0.1px;
+}
+.app-hdr-spacer{width:32px}
+
+/* ============ SCROLL CONTAINER ============ */
+.scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding-bottom:calc(90px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling:touch;
+}
+.scroll::-webkit-scrollbar{width:0;display:none}
+
+/* ============ VIEW ============ */
+.view{display:none;padding:14px 14px 20px}
+.view.active{display:block;animation:fadeUp 0.25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============ SECTION HEAD ============ */
+.section-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:8px 4px;margin-top:10px;
+}
+.section-head h2{
+  font-size:13px;font-weight:700;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.section-head .link{
+  font-size:12px;font-weight:600;color:var(--brand);
+  text-decoration:none;
+}
+
+/* ============ HERO COUNTDOWN (Overview) ============ */
+.hero{
+  background:linear-gradient(135deg, #0070F2 0%, #003D8C 100%);
+  color:#fff;
+  border-radius:var(--rl);
+  padding:22px 22px 26px;
+  position:relative;overflow:hidden;
+  box-shadow:var(--shadow-md);
+  margin-bottom:14px;
+}
+.hero::before{
+  content:"";position:absolute;
+  top:-80px;right:-80px;
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,213,79,0.16) 0%, transparent 70%);
+}
+.hero-eyebrow{
+  font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.12em;
+  opacity:.9;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+  position:relative;z-index:2;
+}
+.hero-eyebrow .dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#FFD54F;animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero-title{
+  font-size:24px;font-weight:600;line-height:1.2;
+  letter-spacing:-0.4px;margin-bottom:6px;
+  position:relative;z-index:2;
+}
+.hero-title .num{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#FFD54F}
+.hero-detail{
+  font-size:13px;opacity:.92;line-height:1.5;
+  position:relative;z-index:2;margin-bottom:14px;
+}
+.hero-stat-row{
+  display:flex;gap:8px;
+  position:relative;z-index:2;
+}
+.hero-mini-stat{
+  flex:1;background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:var(--rs);
+  padding:10px 12px;
+}
+.hero-mini-stat-label{
+  font-size:9px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.06em;opacity:.8;margin-bottom:4px;
+}
+.hero-mini-stat-value{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;font-weight:700;
+}
+
+/* ============ ACTION CARD (Overview, Programs) ============ */
+.action-card{
+  background:var(--surf);
+  border:1.5px solid var(--warn-border);
+  border-radius:var(--rm);
+  padding:14px 16px;
+  margin-bottom:10px;
+  position:relative;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.action-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--warn);
+}
+.action-card-head{
+  display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;
+}
+.action-card-icon{
+  width:38px;height:38px;border-radius:var(--rs);
+  background:var(--warn-bg);color:var(--warn);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.action-card-icon svg{width:18px;height:18px}
+.action-card-body{flex:1;min-width:0}
+.action-card-eyebrow{
+  font-size:10px;font-weight:700;color:var(--warn);
+  text-transform:uppercase;letter-spacing:.05em;
+  margin-bottom:2px;
+}
+.action-card-title{
+  font-size:14px;font-weight:600;color:var(--txt);line-height:1.3;
+  margin-bottom:4px;
+}
+.action-card-detail{
+  font-size:12.5px;color:var(--txt2);line-height:1.45;
+}
+.action-card-cta-row{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+}
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:9px 16px;font-size:13px;font-weight:600;
+  border-radius:var(--rs);border:1px solid var(--bdr);
+  background:var(--surf);color:var(--txt2);
+  cursor:pointer;transition:var(--transition);font-family:inherit;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(0.97)}
+.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.warn{background:var(--warn);color:#fff;border-color:var(--warn)}
+.btn.full{width:100%;justify-content:center}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btn-link{
+  background:none;border:none;padding:6px 4px;
+  font-size:12px;font-weight:500;color:var(--txt3);
+  cursor:pointer;font-family:inherit;
+  text-decoration:underline;text-decoration-color:transparent;
+  transition:var(--transition);
+}
+.btn-link:active{color:var(--brand)}
+
+/* ============ QUICK STATS ROW ============ */
+.qstat-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  margin-bottom:14px;
+}
+.qstat{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rm);
+  padding:14px 12px;
+  text-align:center;
+  box-shadow:var(--shadow);
+}
+.qstat-label{
+  font-size:9px;font-weight:700;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.05em;
+  margin-bottom:4px;
+}
+.qstat-value{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:18px;font-weight:700;color:var(--txt);
+  line-height:1.1;
+}
+.qstat-value.pos{color:var(--pos)}
+.qstat-value.battery{color:var(--battery)}
+.qstat-value .units{font-size:10px;color:var(--txt3);font-weight:600;margin-left:2px}
+.qstat-sub{
+  font-size:10px;color:var(--txt3);margin-top:3px;font-weight:500;
+}
+
+/* ============ SUSTAINABILITY SCORE CARD ============ */
+.score-card{
+  background:linear-gradient(135deg, #E8F5EA 0%, #FFFFFF 100%);
+  border:1.5px solid var(--pos-border);
+  border-radius:var(--rl);
+  padding:18px;margin-bottom:14px;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+.score-row{
+  display:flex;align-items:center;gap:16px;
+}
+.score-ring{
+  width:80px;height:80px;flex-shrink:0;
+  position:relative;
+}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring-num{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+}
+.score-ring-num-val{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:24px;font-weight:700;color:var(--pos);line-height:1;
+}
+.score-ring-num-suffix{
+  font-size:9px;color:var(--txt3);font-weight:600;
+  text-transform:uppercase;letter-spacing:.05em;margin-top:2px;
+}
+.score-body{flex:1}
+.score-eyebrow{
+  font-size:9px;font-weight:700;color:var(--pos);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;
+}
+.score-title{
+  font-size:15px;font-weight:600;color:var(--txt);line-height:1.3;
+  margin-bottom:3px;
+}
+.score-detail{
+  font-size:11.5px;color:var(--txt2);line-height:1.45;
+}
+.score-toggle{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--pos-border);
+  font-size:11.5px;font-weight:600;color:var(--pos);
+  text-align:center;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.score-toggle svg{width:14px;height:14px;transition:transform 0.25s ease}
+.score-card.expanded .score-toggle svg{transform:rotate(180deg)}
+.score-breakdown{
+  display:none;margin-top:12px;
+  flex-direction:column;gap:8px;
+}
+.score-card.expanded .score-breakdown{display:flex;animation:fadeUp 0.3s ease}
+.score-item{
+  display:grid;grid-template-columns:1fr auto;gap:8px;
+  font-size:12px;align-items:center;
+}
+.score-item-bar{
+  grid-column:1 / -1;
+  height:4px;background:var(--bdr-lt);border-radius:2px;
+  overflow:hidden;
+}
+.score-item-bar-fill{
+  height:100%;background:var(--pos);border-radius:2px;
+  transition:width 0.6s ease;
+}
+.score-item-name{color:var(--txt);font-weight:500}
+.score-item-value{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;font-weight:700;color:var(--txt2);
+}
+
+/* ============ RECENT ACTIVITY (Overview) / CASE CARDS (Activity) ============ */
+.case-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rm);
+  padding:14px 16px;
+  margin-bottom:10px;
+  box-shadow:var(--shadow);
+  cursor:pointer;
+  transition:var(--transition);
+  position:relative;
+}
+.case-card:active{transform:scale(0.99);box-shadow:var(--shadow-md)}
+.case-card.in-progress{border-left:3px solid var(--brand)}
+.case-card.pending{border-left:3px solid var(--warn)}
+.case-card.completed{border-left:3px solid var(--pos);opacity:0.92}
+.case-row1{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:6px;
+}
+.case-info{flex:1;min-width:0}
+.case-type{
+  font-size:9.5px;font-weight:700;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;
+}
+.case-name{
+  font-size:14px;font-weight:600;color:var(--txt);
+  line-height:1.3;
+}
+.case-status-pill{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  padding:3px 9px;border-radius:var(--pill);white-space:nowrap;flex-shrink:0;
+}
+.case-status-pill.in-progress{background:var(--brand-bg);color:var(--brand)}
+.case-status-pill.pending{background:var(--warn-bg);color:var(--warn)}
+.case-status-pill.completed{background:var(--pos-bg);color:var(--pos)}
+.case-detail{
+  font-size:12px;color:var(--txt2);line-height:1.45;margin-bottom:8px;
+}
+.case-meta{
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;color:var(--txt3);
+  padding-top:8px;border-top:1px solid var(--bdr-lt);
+}
+.case-meta-item{display:flex;align-items:center;gap:4px}
+.case-meta-item svg{width:11px;height:11px}
+.case-meta-divider{width:3px;height:3px;border-radius:50%;background:var(--txt3);opacity:0.5}
+.case-progress-mini{
+  display:flex;gap:3px;margin-top:8px;
+}
+.case-pdot{
+  flex:1;height:4px;border-radius:2px;background:var(--bdr-lt);
+}
+.case-pdot.done{background:var(--pos)}
+.case-pdot.current{background:var(--brand)}
+
+/* ============ PROGRAM CARD ============ */
+.program-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rm);
+  padding:14px 16px;margin-bottom:10px;
+  box-shadow:var(--shadow);
+  transition:var(--transition);
+}
+.program-card.active{border-left:3px solid var(--pos)}
+.program-card.pending{border-left:3px solid var(--warn)}
+.program-row1{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:8px;
+}
+.program-titleblock{flex:1;min-width:0}
+.program-name{
+  font-size:14.5px;font-weight:600;color:var(--txt);
+  line-height:1.3;display:flex;align-items:center;gap:6px;
+}
+.program-status-pill{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  padding:3px 9px;border-radius:var(--pill);white-space:nowrap;
+}
+.program-status-pill.active{background:var(--pos-bg);color:var(--pos)}
+.program-status-pill.pending{background:var(--warn-bg);color:var(--warn)}
+.program-status-pill.available{background:var(--neutral-bg);color:var(--txt2)}
+.program-status-pill.in-progress{background:var(--brand-bg);color:var(--brand)}
+
+.program-detail{
+  font-size:12.5px;color:var(--txt2);line-height:1.5;
+  margin-bottom:10px;
+}
+.program-detail b{font-weight:600;color:var(--txt)}
+.program-earnings{
+  background:var(--bg2);
+  border:1px solid var(--bdr-lt);
+  border-radius:var(--rs);
+  padding:8px 12px;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;
+}
+.program-earnings-label{color:var(--txt3);font-weight:500;font-size:11px}
+.program-earnings-value{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;font-weight:700;color:var(--pos);
+}
+.program-cta-row{display:flex;gap:6px;align-items:center}
+
+/* ============ REBATE CARD ============ */
+.rebate-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rm);
+  padding:14px 16px;margin-bottom:10px;
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:14px;
+  transition:var(--transition);cursor:pointer;
+}
+.rebate-card:active{transform:scale(0.99)}
+.rebate-card.claimed{opacity:0.7}
+.rebate-icon{
+  width:42px;height:42px;border-radius:var(--rs);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  background:var(--brand-bg);color:var(--brand);
+}
+.rebate-icon.federal{background:#FFE5E5;color:#A91515}
+.rebate-icon.state{background:#FFF4E6;color:#E76500}
+.rebate-icon.thermostat{background:#F0EBFF;color:#6936D9}
+.rebate-icon.ev{background:#E8F5EA;color:var(--pos)}
+.rebate-icon.weather{background:#E5F4F7;color:#0A6ED1}
+.rebate-icon svg{width:22px;height:22px}
+.rebate-body{flex:1;min-width:0}
+.rebate-name{
+  font-size:13.5px;font-weight:600;color:var(--txt);line-height:1.3;
+}
+.rebate-amount{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:15px;font-weight:700;color:var(--pos);
+  margin-top:2px;
+}
+.rebate-amount.claimed{color:var(--txt3)}
+.rebate-status{
+  font-size:10.5px;color:var(--txt3);margin-top:2px;
+}
+.rebate-status.claimed{color:var(--pos);font-weight:600}
+.rebate-chev{color:var(--txt3);font-size:14px;flex-shrink:0}
+
+/* ============ REBATES HERO ============ */
+.rebates-hero{
+  background:linear-gradient(135deg, #E8F5EA 0%, #FFFFFF 100%);
+  border:1.5px solid var(--pos-border);
+  border-radius:var(--rl);
+  padding:18px;margin-bottom:14px;
+  text-align:center;
+  box-shadow:var(--shadow);
+}
+.rebates-hero-eyebrow{
+  font-size:10px;font-weight:700;color:var(--pos);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;
+}
+.rebates-hero-amount{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:36px;font-weight:700;color:var(--pos);
+  line-height:1.1;letter-spacing:-0.5px;
+}
+.rebates-hero-detail{
+  font-size:12px;color:var(--txt2);margin-top:6px;line-height:1.4;
+}
+
+/* ============ EMPTY STATE PLACEHOLDER (between sections in tabs) ============ */
+.empty{
+  padding:24px 16px;text-align:center;color:var(--txt3);
+  font-size:12.5px;font-style:italic;
+}
+
+/* ============ CASE DETAIL VIEW ============ */
+.case-detail-hero{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rl);
+  padding:18px;margin-bottom:14px;
+  box-shadow:var(--shadow);
+}
+.cdh-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cdh-type{
+  font-size:9.5px;font-weight:700;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;
+}
+.cdh-name{
+  font-size:18px;font-weight:600;color:var(--txt);line-height:1.25;
+  letter-spacing:-0.2px;
+}
+.cdh-meta{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--txt3);margin-top:8px;
+}
+.cdh-meta b{color:var(--txt2);font-weight:600}
+.cdh-meta-divider{width:3px;height:3px;border-radius:50%;background:var(--txt3);opacity:0.5}
+
+/* ============ JOURNEY (compact for mobile/case detail) ============ */
+.journey{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rl);
+  padding:18px 18px 10px;
+  margin-bottom:14px;
+  box-shadow:var(--shadow);
+}
+.journey-head{margin-bottom:14px}
+.journey-title{font-size:14px;font-weight:600;color:var(--txt);letter-spacing:-0.1px}
+.journey-subtitle{font-size:11.5px;color:var(--txt2);margin-top:2px}
+.stages{
+  display:flex;flex-direction:column;gap:0;position:relative;
+}
+.stages::before{
+  content:"";position:absolute;
+  left:18px;top:24px;bottom:24px;width:2px;
+  background:var(--bdr-lt);border-radius:1px;
+}
+.stages-progress{
+  position:absolute;left:18px;top:24px;width:2px;
+  background:linear-gradient(180deg, var(--pos) 0%, var(--brand) 100%);
+  border-radius:1px;
+  transition:height 0.6s ease;z-index:1;
+}
+.stage{
+  display:grid;grid-template-columns:38px 1fr;gap:14px;
+  padding:10px 0;align-items:flex-start;
+  position:relative;z-index:2;
+}
+.stage-icon{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--surf);
+  border:2px solid var(--bdr);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:var(--txt3);
+  transition:var(--transition);
+  position:relative;
+}
+.stage.done .stage-icon{
+  background:var(--pos);color:#fff;border-color:var(--pos);
+  box-shadow:0 2px 8px rgba(37,111,58,.2);
+}
+.stage.current .stage-icon{
+  background:var(--brand);color:#fff;border-color:var(--brand);
+  box-shadow:0 0 0 4px rgba(0,112,242,0.15);
+  animation:currentPulse 2.5s infinite;
+}
+@keyframes currentPulse{
+  0%, 100%{box-shadow:0 0 0 4px rgba(0,112,242,0.15)}
+  50%{box-shadow:0 0 0 7px rgba(0,112,242,0.07)}
+}
+.stage-icon svg{width:16px;height:16px}
+.stage-body{padding-top:4px}
+.stage-eyebrow{
+  font-size:9.5px;font-weight:700;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;
+}
+.stage.done .stage-eyebrow{color:var(--pos)}
+.stage.current .stage-eyebrow{color:var(--brand)}
+.stage-name{
+  font-size:14px;font-weight:600;color:var(--txt);
+  line-height:1.3;margin-bottom:3px;
+}
+.stage.upcoming .stage-name{color:var(--txt3)}
+.stage-detail{font-size:12px;color:var(--txt2);line-height:1.45}
+.stage.upcoming .stage-detail{color:var(--txt3)}
+.stage-meta{
+  margin-top:6px;font-size:10.5px;color:var(--txt3);
+}
+.stage-meta b{color:var(--txt2);font-weight:600}
+
+/* ============ BOTTOM TAB BAR ============ */
+.tabbar{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(255,255,255,0.95);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--bdr-lt);
+  padding:8px 4px max(18px, env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:space-around;
+  z-index:50;
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  padding:6px 4px;cursor:pointer;
+  background:none;border:none;font-family:inherit;
+  color:var(--txt3);transition:var(--transition);
+  position:relative;
+}
+.tab svg{width:22px;height:22px}
+.tab-label{
+  font-size:10px;font-weight:600;letter-spacing:.01em;
+}
+.tab.active{color:var(--brand)}
+.tab.active svg{stroke-width:2.5}
+.tab:active{transform:scale(0.94)}
+
+/* ============ HELP CARD (small, at end of overview) ============ */
+.help-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:var(--rm);
+  padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:var(--shadow);
+  margin-top:8px;
+}
+.help-icon{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--brand-bg);color:var(--brand);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.help-icon svg{width:18px;height:18px}
+.help-body{flex:1}
+.help-title{font-size:12.5px;font-weight:600;color:var(--txt)}
+.help-detail{font-size:11px;color:var(--txt2);margin-top:2px;line-height:1.4}
+.help-detail a{color:var(--brand);font-weight:600;text-decoration:none}
+
+/* ============ TAB SUBHEADER (Programs, Activity, Rebates) ============ */
+.view-hdr{
+  padding:8px 4px 12px;
+}
+.view-hdr h1{
+  font-size:22px;font-weight:600;color:var(--txt);
+  letter-spacing:-0.4px;
+}
+.view-hdr p{
+  font-size:13px;color:var(--txt2);margin-top:4px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- ============ APP HEADER (back arrow, title) ============ -->
+  <div class="app-hdr">
+    <button class="app-hdr-back" aria-label="Back to SEW">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="app-hdr-title" id="appTitle">My Solar &amp; Battery</div>
+    <div class="app-hdr-spacer"></div>
+  </div>
+
+  <!-- ============ SCROLL CONTAINER ============ -->
+  <div class="scroll" id="scroll">
+
+    <!-- ====================================================================
+         VIEW: OVERVIEW
+    ===================================================================== -->
+    <div class="view active" id="view-overview" data-title="My Solar &amp; Battery">
+
+      <!-- Hero countdown -->
+      <div class="hero">
+        <div class="hero-eyebrow"><span class="dot"></span> Approved · Activation in progress</div>
+        <div class="hero-title">Goes live in <span class="num">27</span> days</div>
+        <div class="hero-detail">Engineering approved your system. We're now coordinating your meter swap, rate change, and battery program.</div>
+        <div class="hero-stat-row">
+          <div class="hero-mini-stat">
+            <div class="hero-mini-stat-label">Target</div>
+            <div class="hero-mini-stat-value">Jun 12</div>
+          </div>
+          <div class="hero-mini-stat">
+            <div class="hero-mini-stat-label">Need from you</div>
+            <div class="hero-mini-stat-value">2 tasks</div>
+          </div>
+          <div class="hero-mini-stat">
+            <div class="hero-mini-stat-label">Score</div>
+            <div class="hero-mini-stat-value">87 / 100</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Required -->
+      <div class="section-head">
+        <h2>Need from you</h2>
+        <a class="link" href="#" onclick="switchTab('activity');return false;">See all</a>
+      </div>
+
+      <div class="action-card">
+        <div class="action-card-head">
+          <div class="action-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+          </div>
+          <div class="action-card-body">
+            <div class="action-card-eyebrow">By June 1</div>
+            <div class="action-card-title">Confirm meter exchange</div>
+            <div class="action-card-detail">A technician needs ~30 minutes to swap your meter for a bidirectional model. We're proposing <b>Jun 5, 10am–noon</b>.</div>
+          </div>
+        </div>
+        <div class="action-card-cta-row">
+          <button class="btn primary sm">Confirm</button>
+          <button class="btn-link">Pick another time</button>
+        </div>
+      </div>
+
+      <div class="action-card">
+        <div class="action-card-head">
+          <div class="action-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="6" y2="12.01"/><circle cx="12" cy="12" r="2"/></svg>
+          </div>
+          <div class="action-card-body">
+            <div class="action-card-eyebrow">Enroll to start earning</div>
+            <div class="action-card-title">Accept Battery BYO terms</div>
+            <div class="action-card-detail">Your Powerwall qualifies for our Battery BYO program: <b>$25/event + $400/yr capacity</b>. ~$625/yr typical.</div>
+          </div>
+        </div>
+        <div class="action-card-cta-row">
+          <button class="btn warn sm">Review &amp; enroll</button>
+          <button class="btn-link">Tell me more</button>
+        </div>
+      </div>
+
+      <!-- Sustainability Score -->
+      <div class="section-head">
+        <h2>Your Impact</h2>
+      </div>
+
+      <div class="score-card" id="scoreCard">
+        <div class="score-row">
+          <div class="score-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#E8F5EA" stroke-width="7"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#256F3A" stroke-width="7" stroke-linecap="round" stroke-dasharray="186" stroke-dashoffset="28"/>
+            </svg>
+            <div class="score-ring-num">
+              <div class="score-ring-num-val">87</div>
+              <div class="score-ring-num-suffix">/ 100</div>
+            </div>
+          </div>
+          <div class="score-body">
+            <div class="score-eyebrow">Sustainability Score</div>
+            <div class="score-title">You're in the top 8% of your community</div>
+            <div class="score-detail">Solar + battery + EV. You're avoiding ~6.2 tons of CO₂ per year.</div>
+          </div>
+        </div>
+        <div class="score-toggle" onclick="document.getElementById('scoreCard').classList.toggle('expanded')">
+          See breakdown
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="score-breakdown">
+          <div class="score-item">
+            <div class="score-item-name">Clean energy use</div>
+            <div class="score-item-value">32 / 35</div>
+            <div class="score-item-bar"><div class="score-item-bar-fill" style="width:91%"></div></div>
+          </div>
+          <div class="score-item">
+            <div class="score-item-name">Program participation</div>
+            <div class="score-item-value">18 / 25</div>
+            <div class="score-item-bar"><div class="score-item-bar-fill" style="width:72%"></div></div>
+          </div>
+          <div class="score-item">
+            <div class="score-item-name">Grid services</div>
+            <div class="score-item-value">12 / 15</div>
+            <div class="score-item-bar"><div class="score-item-bar-fill" style="width:80%"></div></div>
+          </div>
+          <div class="score-item">
+            <div class="score-item-name">Smart devices</div>
+            <div class="score-item-value">15 / 15</div>
+            <div class="score-item-bar"><div class="score-item-bar-fill" style="width:100%"></div></div>
+          </div>
+          <div class="score-item">
+            <div class="score-item-name">Efficiency</div>
+            <div class="score-item-value">10 / 10</div>
+            <div class="score-item-bar"><div class="score-item-bar-fill" style="width:100%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent activity preview -->
+      <div class="section-head">
+        <h2>Recent Activity</h2>
+        <a class="link" href="#" onclick="switchTab('activity');return false;">See all</a>
+      </div>
+
+      <div class="case-card in-progress" onclick="openCase('CASE-04471')">
+        <div class="case-row1">
+          <div class="case-info">
+            <div class="case-type">Solar + Battery Installation</div>
+            <div class="case-name">DER Onboarding</div>
+          </div>
+          <span class="case-status-pill in-progress">In progress</span>
+        </div>
+        <div class="case-detail">Stage 3 of 5 · Activation in progress · 2 things need you</div>
+        <div class="case-progress-mini">
+          <div class="case-pdot done"></div>
+          <div class="case-pdot done"></div>
+          <div class="case-pdot current"></div>
+          <div class="case-pdot"></div>
+          <div class="case-pdot"></div>
+        </div>
+      </div>
+
+      <!-- Help card -->
+      <div class="help-card">
+        <div class="help-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        </div>
+        <div class="help-body">
+          <div class="help-title">Questions about your activation?</div>
+          <div class="help-detail"><a href="tel:18005551234">(800) 555-1234</a> · Mon–Fri 8am–6pm EST</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         VIEW: PROGRAMS
+    ===================================================================== -->
+    <div class="view" id="view-programs" data-title="Programs">
+
+      <div class="view-hdr">
+        <h1>Programs</h1>
+        <p>Enroll once, save and earn continuously.</p>
+      </div>
+
+      <!-- ACTIVE -->
+      <div class="section-head">
+        <h2>Active <span style="color:var(--pos)">·</span> <span style="font-family:'IBM Plex Mono',monospace;color:var(--txt)">1</span></h2>
+      </div>
+
+      <div class="program-card active">
+        <div class="program-row1">
+          <div class="program-titleblock">
+            <div class="program-name">Net Energy Metering (NEM 2.0)</div>
+          </div>
+          <span class="program-status-pill active">Enrolled</span>
+        </div>
+        <div class="program-detail">Sell excess solar back to the grid at the retail rate. Effective when your system energizes on <b>Jun 12</b>.</div>
+        <div class="program-earnings">
+          <span class="program-earnings-label">Estimated annual credit</span>
+          <span class="program-earnings-value">~$1,800</span>
+        </div>
+      </div>
+
+      <!-- PENDING -->
+      <div class="section-head">
+        <h2>Pending Enrollment <span style="color:var(--warn)">·</span> <span style="font-family:'IBM Plex Mono',monospace;color:var(--txt)">1</span></h2>
+      </div>
+
+      <div class="program-card pending">
+        <div class="program-row1">
+          <div class="program-titleblock">
+            <div class="program-name">Battery BYO Program</div>
+          </div>
+          <span class="program-status-pill pending">Awaiting you</span>
+        </div>
+        <div class="program-detail">Your Powerwall qualifies for fast-track enrollment. Earn <b>$25/event</b> plus <b>$400/year</b> capacity payment. You stay in full control — opt out anytime, never during outages.</div>
+        <div class="program-earnings">
+          <span class="program-earnings-label">Typical earnings</span>
+          <span class="program-earnings-value">~$625 / year</span>
+        </div>
+        <div class="program-cta-row">
+          <button class="btn warn full sm">Review &amp; Enroll</button>
+        </div>
+      </div>
+
+      <!-- AVAILABLE -->
+      <div class="section-head">
+        <h2>Available Programs <span style="color:var(--txt3)">·</span> <span style="font-family:'IBM Plex Mono',monospace;color:var(--txt)">4</span></h2>
+      </div>
+
+      <div class="program-card">
+        <div class="program-row1">
+          <div class="program-titleblock">
+            <div class="program-name">Time-of-Use Pricing</div>
+          </div>
+          <span class="program-status-pill in-progress">In review</span>
+        </div>
+        <div class="program-detail">Pay less for electricity overnight and on weekends. Could save you ~$240/year given your usage pattern.</div>
+        <div class="program-earnings">
+          <span class="program-earnings-label">Estimated savings</span>
+          <span class="program-earnings-value">~$240 / year</span>
+        </div>
+        <div class="program-cta-row">
+          <button class="btn sm" onclick="openCase('CASE-04612')">View request</button>
+        </div>
+      </div>
+
+      <div class="program-card">
+        <div class="program-row1">
+          <div class="program-titleblock">
+            <div class="program-name">Managed EV Charging</div>
+          </div>
+          <span class="program-status-pill available">Recommended</span>
+        </div>
+        <div class="program-detail">Charge your Tesla overnight at a special rate. Based on your charging pattern, you'd save ~$30/month — plus your Wall Connector is already eligible.</div>
+        <div class="program-earnings">
+          <span class="program-earnings-label">Typical savings</span>
+          <span class="program-earnings-value">~$360 / year</span>
+        </div>
+        <div class="program-cta-row">
+          <button class="btn primary sm">Enroll</button>
+          <button class="btn-link">Learn more</button>
+        </div>
+      </div>
+
+      <div class="program-card">
+        <div class="program-row1">
+          <div class="program-titleblock">
+            <div class="program-name">Smart Thermostat Program</div>
+          </div>
+          <span class="program-status-pill available">Available</span>
+        </div>
+        <div class="program-detail">Get a $50 incentive for a Nest, Ecobee, or Honeywell thermostat, plus $25/year for participating in summer cooling events.</div>
+        <div class="program-earnings">
+          <span class="program-earnings-label">Sign-up bonus</span>
+          <span class="program-earnings-value">$50</span>
+        </div>
+        <div class="program-cta-row">
+          <button class="btn sm">Learn more</button>
+        </div>
+      </div>
+
+      <div class="program-card">
+        <div class="program-row1">
+          <div class="program-titleblock">
+            <div class="program-name">Community Solar Subscription</div>
+          </div>
+          <span class="program-status-pill available">Not a fit</span>
+        </div>
+        <div class="program-detail">For customers without rooftop access. <b>You're installing your own PV</b>, so this isn't needed — but a friend or neighbor without a roof might want it.</div>
+        <div class="program-cta-row">
+          <button class="btn sm">Refer a friend</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         VIEW: ACTIVITY
+    ===================================================================== -->
+    <div class="view" id="view-activity" data-title="Activity">
+
+      <div class="view-hdr">
+        <h1>My Requests</h1>
+        <p>All your DER-related cases and requests.</p>
+      </div>
+
+      <!-- ACTIVE -->
+      <div class="section-head">
+        <h2>Open <span style="color:var(--txt3)">·</span> <span style="font-family:'IBM Plex Mono',monospace;color:var(--txt)">2</span></h2>
+      </div>
+
+      <div class="case-card in-progress" onclick="openCase('CASE-04471')">
+        <div class="case-row1">
+          <div class="case-info">
+            <div class="case-type">Solar + Battery Installation</div>
+            <div class="case-name">DER Onboarding</div>
+          </div>
+          <span class="case-status-pill in-progress">In progress</span>
+        </div>
+        <div class="case-detail">Stage 3 of 5 · Activation in progress · 2 actions needed</div>
+        <div class="case-progress-mini">
+          <div class="case-pdot done"></div>
+          <div class="case-pdot done"></div>
+          <div class="case-pdot current"></div>
+          <div class="case-pdot"></div>
+          <div class="case-pdot"></div>
+        </div>
+        <div class="case-meta">
+          <span class="case-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Opened <b>Apr 28</b>
+          </span>
+          <span class="case-meta-divider"></span>
+          <span class="case-meta-item">Target Jun 12</span>
+        </div>
+      </div>
+
+      <div class="case-card pending" onclick="openCase('CASE-04612')">
+        <div class="case-row1">
+          <div class="case-info">
+            <div class="case-type">Rate Change Request</div>
+            <div class="case-name">Time-of-Use Enrollment</div>
+          </div>
+          <span class="case-status-pill pending">In review</span>
+        </div>
+        <div class="case-detail">We're checking your usage pattern fits TOU pricing.</div>
+        <div class="case-progress-mini">
+          <div class="case-pdot done"></div>
+          <div class="case-pdot current"></div>
+          <div class="case-pdot"></div>
+        </div>
+        <div class="case-meta">
+          <span class="case-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Opened <b>May 12</b>
+          </span>
+          <span class="case-meta-divider"></span>
+          <span class="case-meta-item">3-5 business days</span>
+        </div>
+      </div>
+
+      <!-- COMPLETED -->
+      <div class="section-head">
+        <h2>Completed <span style="color:var(--txt3)">·</span> <span style="font-family:'IBM Plex Mono',monospace;color:var(--txt)">1</span></h2>
+      </div>
+
+      <div class="case-card completed" onclick="openCase('CASE-04102')">
+        <div class="case-row1">
+          <div class="case-info">
+            <div class="case-type">Home Energy Audit</div>
+            <div class="case-name">Energy Efficiency Audit</div>
+          </div>
+          <span class="case-status-pill completed">Completed</span>
+        </div>
+        <div class="case-detail">Auditor recommendations delivered · 4 improvements identified</div>
+        <div class="case-progress-mini">
+          <div class="case-pdot done"></div>
+          <div class="case-pdot done"></div>
+          <div class="case-pdot done"></div>
+          <div class="case-pdot done"></div>
+        </div>
+        <div class="case-meta">
+          <span class="case-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Closed <b>Dec 8, 2024</b>
+          </span>
+        </div>
+      </div>
+
+      <!-- Initiate new -->
+      <div style="margin-top:18px">
+        <button class="btn full" onclick="switchTab('programs')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Start a new request
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         VIEW: REBATES
+    ===================================================================== -->
+    <div class="view" id="view-rebates" data-title="Rebates">
+
+      <div class="view-hdr">
+        <h1>Rebates</h1>
+        <p>Money back for clean energy upgrades you've made.</p>
+      </div>
+
+      <!-- Available total -->
+      <div class="rebates-hero">
+        <div class="rebates-hero-eyebrow">Available to claim</div>
+        <div class="rebates-hero-amount">$8,820</div>
+        <div class="rebates-hero-detail">Across 3 federal &amp; state programs based on your installation</div>
+      </div>
+
+      <!-- AVAILABLE -->
+      <div class="section-head">
+        <h2>Available to Claim</h2>
+      </div>
+
+      <div class="rebate-card">
+        <div class="rebate-icon federal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div class="rebate-body">
+          <div class="rebate-name">Federal Residential Clean Energy Credit</div>
+          <div class="rebate-amount">$7,200</div>
+          <div class="rebate-status">30% of installed cost · IRS Form 5695 · claim with 2026 taxes</div>
+        </div>
+        <div class="rebate-chev">›</div>
+      </div>
+
+      <div class="rebate-card">
+        <div class="rebate-icon state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div class="rebate-body">
+          <div class="rebate-name">FL Solar &amp; Energy Storage Sales Tax Exemption</div>
+          <div class="rebate-amount">$1,560</div>
+          <div class="rebate-status">No FL sales tax on solar + storage equipment</div>
+        </div>
+        <div class="rebate-chev">›</div>
+      </div>
+
+      <div class="rebate-card">
+        <div class="rebate-icon ev">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="rebate-body">
+          <div class="rebate-name">EV Charger Installation Rebate</div>
+          <div class="rebate-amount">$60</div>
+          <div class="rebate-status">$60 toward your Tesla Wall Connector installation</div>
+        </div>
+        <div class="rebate-chev">›</div>
+      </div>
+
+      <!-- ALREADY CLAIMED -->
+      <div class="section-head">
+        <h2>Already Claimed</h2>
+      </div>
+
+      <div class="rebate-card claimed">
+        <div class="rebate-icon thermostat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9a4 4 0 0 0-2 7.5 1 1 0 0 1 .5.87V18a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-.63a1 1 0 0 1 .5-.87A4 4 0 0 0 12 9z"/><path d="M12 2v3M5.6 5.6l2.1 2.1M2 12h3M5.6 18.4l2.1-2.1"/></svg>
+        </div>
+        <div class="rebate-body">
+          <div class="rebate-name">Smart Thermostat Rebate</div>
+          <div class="rebate-amount claimed">$50</div>
+          <div class="rebate-status claimed">Claimed Mar 2024</div>
+        </div>
+        <div class="rebate-chev">›</div>
+      </div>
+
+      <div class="rebate-card claimed">
+        <div class="rebate-icon weather">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="rebate-body">
+          <div class="rebate-name">Weatherization Rebate</div>
+          <div class="rebate-amount claimed">$320</div>
+          <div class="rebate-status claimed">Claimed Jan 2025</div>
+        </div>
+        <div class="rebate-chev">›</div>
+      </div>
+
+      <!-- Help card -->
+      <div class="help-card" style="margin-top:18px">
+        <div class="help-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div class="help-body">
+          <div class="help-title">How rebates work</div>
+          <div class="help-detail">Some are claimed on your taxes, others apply to your bill or installation cost. <a href="#">Learn more</a></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         VIEW: CASE DETAIL (DER Onboarding · CASE-04471)
+    ===================================================================== -->
+    <div class="view" id="view-case-04471" data-title="DER Onboarding" data-parent="activity">
+
+      <div class="case-detail-hero">
+        <div class="cdh-row">
+          <div>
+            <div class="cdh-type">Solar + Battery Installation</div>
+            <div class="cdh-name">DER Onboarding</div>
+          </div>
+          <span class="case-status-pill in-progress">In progress</span>
+        </div>
+        <div class="cdh-meta">
+          <span>Opened <b>Apr 28, 2026</b></span>
+          <span class="cdh-meta-divider"></span>
+          <span>Target energization <b>Jun 12, 2026</b></span>
+        </div>
+      </div>
+
+      <!-- Pending actions for this case -->
+      <div class="section-head">
+        <h2>Need from you</h2>
+      </div>
+
+      <div class="action-card">
+        <div class="action-card-head">
+          <div class="action-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>
+          </div>
+          <div class="action-card-body">
+            <div class="action-card-eyebrow">By June 1</div>
+            <div class="action-card-title">Confirm meter exchange</div>
+            <div class="action-card-detail">Proposed: <b>Jun 5, 10am–noon</b>. Service off during the ~30 min swap.</div>
+          </div>
+        </div>
+        <div class="action-card-cta-row">
+          <button class="btn primary sm">Confirm</button>
+          <button class="btn-link">Reschedule</button>
+        </div>
+      </div>
+
+      <div class="action-card">
+        <div class="action-card-head">
+          <div class="action-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="6" y2="12.01"/><circle cx="12" cy="12" r="2"/></svg>
+          </div>
+          <div class="action-card-body">
+            <div class="action-card-eyebrow">Enroll to start earning</div>
+            <div class="action-card-title">Accept Battery BYO terms</div>
+            <div class="action-card-detail"><b>$25/event + $400/yr capacity</b>. Opt out anytime.</div>
+          </div>
+        </div>
+        <div class="action-card-cta-row">
+          <button class="btn warn sm">Review &amp; enroll</button>
+        </div>
+      </div>
+
+      <!-- The Journey (the same component from der-portal.html, scaled for mobile) -->
+      <div class="journey">
+        <div class="journey-head">
+          <div class="journey-title">Your Journey</div>
+          <div class="journey-subtitle">5 stages · 2 complete · 1 in progress</div>
+        </div>
+
+        <div class="stages">
+          <div class="stages-progress" style="height:160px"></div>
+
+          <div class="stage done">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 1 of 5</div>
+              <div class="stage-name">Application received</div>
+              <div class="stage-detail">Sunrun submitted your technical packet.</div>
+              <div class="stage-meta">Completed <b>Apr 28, 2026</b></div>
+            </div>
+          </div>
+
+          <div class="stage done">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 2 of 5</div>
+              <div class="stage-name">Engineering review</div>
+              <div class="stage-detail">Approved with fast-track status.</div>
+              <div class="stage-meta">Approved <b>May 15, 2026</b></div>
+            </div>
+          </div>
+
+          <div class="stage current">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 3 of 5 · In progress</div>
+              <div class="stage-name">Activation: meter, rate &amp; programs</div>
+              <div class="stage-detail">Three things in parallel. We need help with two (above).</div>
+            </div>
+          </div>
+
+          <div class="stage upcoming">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 4 of 5</div>
+              <div class="stage-name">Your system goes live</div>
+              <div class="stage-detail">Solar produces, battery cycles, bill switches to NEM.</div>
+              <div class="stage-meta">Target <b>Jun 12, 2026</b></div>
+            </div>
+          </div>
+
+          <div class="stage upcoming">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 5 of 5</div>
+              <div class="stage-name">Earning credits</div>
+              <div class="stage-detail">Battery participates in capacity events. Up to $625/yr.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         VIEW: CASE DETAIL (TOU Enrollment · CASE-04612)
+    ===================================================================== -->
+    <div class="view" id="view-case-04612" data-title="Time-of-Use Enrollment" data-parent="activity">
+
+      <div class="case-detail-hero">
+        <div class="cdh-row">
+          <div>
+            <div class="cdh-type">Rate Change Request</div>
+            <div class="cdh-name">Time-of-Use Enrollment</div>
+          </div>
+          <span class="case-status-pill pending">In review</span>
+        </div>
+        <div class="cdh-meta">
+          <span>Submitted <b>May 12, 2026</b></span>
+          <span class="cdh-meta-divider"></span>
+          <span>Expected response <b>by May 17</b></span>
+        </div>
+      </div>
+
+      <div class="journey">
+        <div class="journey-head">
+          <div class="journey-title">Request Status</div>
+          <div class="journey-subtitle">3 stages · 1 complete · 1 in progress</div>
+        </div>
+
+        <div class="stages">
+          <div class="stages-progress" style="height:75px"></div>
+
+          <div class="stage done">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 1 of 3</div>
+              <div class="stage-name">Request submitted</div>
+              <div class="stage-detail">You requested to switch from RS-1-NEM to RS-TOU-NEM (Time-of-Use Net Metering).</div>
+              <div class="stage-meta">Submitted <b>May 12, 2026</b></div>
+            </div>
+          </div>
+
+          <div class="stage current">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 2 of 3 · In progress</div>
+              <div class="stage-name">Eligibility review</div>
+              <div class="stage-detail">We're checking your usage pattern to confirm TOU pricing would save you money. Most reviews take 3-5 business days.</div>
+            </div>
+          </div>
+
+          <div class="stage upcoming">
+            <div class="stage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 3 of 3</div>
+              <div class="stage-name">Rate change applied</div>
+              <div class="stage-detail">If approved, your new rate goes into effect on your next billing cycle.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ====================================================================
+         VIEW: CASE DETAIL (Energy Audit · CASE-04102, COMPLETED)
+    ===================================================================== -->
+    <div class="view" id="view-case-04102" data-title="Energy Efficiency Audit" data-parent="activity">
+
+      <div class="case-detail-hero">
+        <div class="cdh-row">
+          <div>
+            <div class="cdh-type">Home Energy Audit</div>
+            <div class="cdh-name">Energy Efficiency Audit</div>
+          </div>
+          <span class="case-status-pill completed">Completed</span>
+        </div>
+        <div class="cdh-meta">
+          <span>Opened <b>Nov 12, 2024</b></span>
+          <span class="cdh-meta-divider"></span>
+          <span>Closed <b>Dec 8, 2024</b></span>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <h2>What we found</h2>
+      </div>
+
+      <div class="case-card" style="cursor:default;border-left:3px solid var(--leaf)">
+        <div class="case-detail" style="font-size:13px;margin-bottom:10px;color:var(--txt)">
+          The auditor identified 4 improvements that could reduce your home energy use by an estimated <b>~18%</b>:
+        </div>
+        <ul style="list-style:none;padding-left:0;margin:0;font-size:12.5px;color:var(--txt2);line-height:1.7">
+          <li>· Attic insulation upgrade (R-30 → R-49)</li>
+          <li>· Air seal recessed lighting fixtures</li>
+          <li>· Replace 2 single-pane windows (west-facing)</li>
+          <li>· Install smart thermostat (you've since done this ✓)</li>
+        </ul>
+        <button class="btn full sm" style="margin-top:14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Download Audit Report
+        </button>
+      </div>
+
+      <div class="journey">
+        <div class="journey-head">
+          <div class="journey-title">Request History</div>
+          <div class="journey-subtitle">4 stages · all complete</div>
+        </div>
+
+        <div class="stages">
+          <div class="stages-progress" style="height:240px"></div>
+
+          <div class="stage done">
+            <div class="stage-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 1 of 4</div>
+              <div class="stage-name">Audit requested</div>
+              <div class="stage-meta">Nov 12, 2024</div>
+            </div>
+          </div>
+          <div class="stage done">
+            <div class="stage-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 2 of 4</div>
+              <div class="stage-name">Auditor visit scheduled</div>
+              <div class="stage-meta">Nov 18, 2024</div>
+            </div>
+          </div>
+          <div class="stage done">
+            <div class="stage-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 3 of 4</div>
+              <div class="stage-name">On-site assessment</div>
+              <div class="stage-meta">Nov 26, 2024 · 90 min</div>
+            </div>
+          </div>
+          <div class="stage done">
+            <div class="stage-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="stage-body">
+              <div class="stage-eyebrow">Stage 4 of 4</div>
+              <div class="stage-name">Report delivered</div>
+              <div class="stage-meta">Dec 8, 2024</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- ============ BOTTOM TAB BAR ============ -->
+  <nav class="tabbar">
+    <button class="tab active" data-tab="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="tab-label">Overview</span>
+    </button>
+    <button class="tab" data-tab="programs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="tab-label">Programs</span>
+    </button>
+    <button class="tab" data-tab="activity">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="tab-label">Activity</span>
+    </button>
+    <button class="tab" data-tab="rebates">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="tab-label">Rebates</span>
+    </button>
+  </nav>
+
+</div><!-- /frame -->
+
+<script>
+const tabs = ['overview', 'programs', 'activity', 'rebates'];
+
+function switchTab(name) {
+  // Update tab UI
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const btn = document.querySelector(`.tab[data-tab="${name}"]`);
+  if (btn) btn.classList.add('active');
+
+  // Hide all views, show the requested one
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const view = document.getElementById('view-' + name);
+  if (view) {
+    view.classList.add('active');
+    // Update header title
+    document.getElementById('appTitle').textContent = view.dataset.title || 'My Solar & Battery';
+    // Scroll to top of the scroll container
+    document.getElementById('scroll').scrollTo({top: 0, behavior: 'instant'});
+  }
+}
+
+// Tab clicks
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => switchTab(t.dataset.tab));
+});
+
+// Case detail open: switch to case detail view, keep "Activity" tab active visually since case-detail.parent === activity
+function openCase(caseId) {
+  // Map case ID to view ID
+  const view = document.getElementById('view-case-' + caseId.replace('CASE-', ''));
+  if (!view) return;
+
+  // Hide all views
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  view.classList.add('active');
+
+  // Update header title
+  document.getElementById('appTitle').textContent = view.dataset.title || 'Request Detail';
+
+  // Mark Activity tab as active
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="activity"]').classList.add('active');
+
+  // Scroll to top
+  document.getElementById('scroll').scrollTo({top: 0, behavior: 'instant'});
+}
+
+// Back button: go to parent view (case detail → activity)
+document.querySelector('.app-hdr-back').addEventListener('click', () => {
+  const currentView = document.querySelector('.view.active');
+  if (!currentView) return;
+  const parent = currentView.dataset.parent;
+  if (parent) {
+    switchTab(parent);
+  } else {
+    // We're on a top-level tab; in production this would close the DER mini-app and return to SEW
+    switchTab('overview');
+  }
+});
+
+// Initialize current time in status bar to a fixed demo time (9:41 is Apple's universal demo time)
+// (intentionally not real-time — demo screenshots traditionally use 9:41)
+
+</script>
+
+</body>
+</html>

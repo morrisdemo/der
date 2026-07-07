@@ -544,9 +544,9 @@ const P = new URLSearchParams(window.location.search);
 const PROJECT_ID = P.get('project') || 'CS-PROJ-0007';
 const MODEL_OVERRIDE = P.get('model');
 
-const RATE_LABELS = {RES_TIER:'Residential — Tiered',RES_TOU:'Residential — TOU',SMALL_COMM:'Small Commercial',COMM_DEMAND:'Commercial — Demand'};
-const RATE_SCHEDULE = {RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'};
-const CAT_SHORT = {RES_TIER:'Res-Tier',RES_TOU:'Res-TOU',SMALL_COMM:'Sm-Comm',COMM_DEMAND:'Comm-Dem'};
+const RATE_LABELS = {RES_TIER:'Residential — Tiered',RES_TOU:'Residential — TOU',SMALL_COMM:'Small Commercial',COMM_DEMAND:'Commercial — Demand',USLI_TIER:'Residential — USLI Tiered'};
+const RATE_SCHEDULE = {RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV',USLI_TIER:'EL-RES-TIER-01'};
+const CAT_SHORT = {RES_TIER:'Res-Tier',RES_TOU:'Res-TOU',SMALL_COMM:'Sm-Comm',COMM_DEMAND:'Comm-Dem',USLI_TIER:'USLI-Tier'};
 
 /* Installation derives from BP by standard alpha-swap: US000nnnnn -> USA00nnnnn (3rd char -> A). CA mirrors BP. */
 function instFromBp(bp){ return bp.slice(0,2)+'A'+bp.slice(3); }
@@ -661,7 +661,7 @@ function resolvePortfolio(){
   const base = defaultPortfolio();
   try{
     Object.keys(base).forEach(pid=>{
-      const s=localStorage.getItem('hostmgr_'+pid);
+      const s=localStorage.getItem('hostmgr_v2_'+pid);
       if(s){ base[pid]=JSON.parse(s); }
     });
   }catch(e){}
@@ -782,7 +782,7 @@ async function resolveLivePortfolio(){
 }
 
 // DATA is set when a project is opened (openProject). Persist writes back to the selected project.
-function persist(){ if(LIVE||!selectedProjectId) return; try{ PORTFOLIO[selectedProjectId]=DATA; localStorage.setItem('hostmgr_'+selectedProjectId, JSON.stringify(DATA)); }catch(e){} }
+function persist(){ if(LIVE||!selectedProjectId) return; try{ PORTFOLIO[selectedProjectId]=DATA; localStorage.setItem('hostmgr_v2_'+selectedProjectId, JSON.stringify(DATA)); }catch(e){} }
 
 let sortKey='sharePct', sortDir=-1;
 
@@ -840,7 +840,7 @@ function acctFromExistingSubscriber(key){
   const parts=(s.address||'').split(',').map(t=>t.trim());
   return {ContractAccount:s.ca||s.bp,BusinessPartner:s.bp,Installation:s.anlage,
     SubscriberName:s.name,ServiceAddress:parts[0]||s.address,City:parts[1]||'',State:parts[2]||'NY',PostalCode:parts[3]||'',
-    RateCategory:s.rateCategory,RateSchedule:({RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'}[s.rateCategory]||'')};
+    RateCategory:s.rateCategory,RateSchedule:(RATE_SCHEDULE[s.rateCategory]||'')};
 }
 async function lookupAccount(key){
   key=(key||'').trim().toUpperCase();

@@ -840,7 +840,7 @@ function acctFromExistingSubscriber(key){
   const parts=(s.address||'').split(',').map(t=>t.trim());
   return {ContractAccount:s.ca||s.bp,BusinessPartner:s.bp,Installation:s.anlage,
     SubscriberName:s.name,ServiceAddress:parts[0]||s.address,City:parts[1]||'',State:parts[2]||'NY',PostalCode:parts[3]||'',
-    RateCategory:s.rateCategory,RateSchedule:({USLI-TIER:'EL-RES_TIER-02',RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'}[s.rateCategory]||'')};
+    RateCategory:s.rateCategory,RateSchedule:({USLI-TIER:'EL-RES-TIER-01',RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'}[s.rateCategory]||'')};
 }
 async function lookupAccount(key){
   key=(key||'').trim().toUpperCase();

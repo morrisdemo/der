@@ -23,6 +23,7 @@
   --transition:all .25s cubic-bezier(.4,0,.2,1)
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html{zoom:1.22}
 body{font-family:'72','IBM Plex Sans',-apple-system,sans-serif;font-size:13px;line-height:1.5;color:var(--txt);background:var(--bg);-webkit-font-smoothing:antialiased;padding-bottom:48px}
 [class^="si-"]::before,[class*=" si-"]::before{font-family:'SAP-icons';font-style:normal;font-weight:normal;display:inline-block;text-align:center;font-size:inherit;line-height:1}
 .si-home::before{content:"\e070"}.si-money::before{content:"\e07c"}.si-chart::before{content:"\e090"}
@@ -554,18 +555,20 @@ function larkfieldProject(){
   return {
     project:{
       projectId:'CS-PROJ-07', name:'Larkfield Community Solar',
-      hostBp:'US00003300', hostName:'Larkfield Solar Partners LLC',
+      hostBp:'US00003301', hostName:'Larkfield Solar Partners LLC',
       model:'net_crediting', programType:'CDG_VALUE_STACK', segment:'IOU', allocableCapacityKw:1800, nameplateKw:1875,
-      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM','COMM_DEMAND'],
+      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM','COMM_DEMAND','USLI_TIER'],
       currentPeriod:'Jun 2026', subscriberCount:312, allocatedPct:87.4,
       anchorSharePct:15.0, anchorName:'Harborview Center'
     },
     subscribers:[
+      {bp:'US00003299',name:'Jackie Monsanto',address:'3299 Larkfield Rd, East Northport NY 11731',rateCategory:'USLI_TIER',sharePct:0.45,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003300',name:'Makayla Morrison',address:'3300 Larkfield Rd, East Northport NY 11731',rateCategory:'USLI_TIER',sharePct:0.75,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
       {bp:'US00003320',name:'Sarah Whitfield',address:'42 Bayview Ave, Northport NY 11768',rateCategory:'RES_TIER',sharePct:0.45,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
       {bp:'US00003321',name:'Marcus Delgado',address:'205 Ocean Ave, Bay Shore NY 11706',rateCategory:'RES_TOU',sharePct:0.60,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
       {bp:'US00003322',name:'Harborview Center',address:'1200 Sunrise Hwy, Islip NY 11751',rateCategory:'COMM_DEMAND',sharePct:15.00,anchor:true,status:'active',effectiveFrom:'2025-11-01',effectiveTo:null},
       {bp:'US00003323',name:'Priya Nair',address:'88 Larkfield Rd, East Northport NY 11731',rateCategory:'RES_TIER',sharePct:0.38,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null},
-      {bp:'US00003324',name:"Delgado's Bakery",address:'340 Main St, Huntington NY 11743',rateCategory:'SMALL_COMM',sharePct:2.10,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003324',name:"Delgado's Bakery",address:'340 Main St, Huntington NY 11743',rateCategory:'SMALL_COMM',sharePct:2.10,anchor:false,status:'active',effectiveFrom:'2026-06-01',effectiveTo:null},
       {bp:'US00003325',name:'James Okonkwo',address:'17 Pine Aire Dr, Bay Shore NY 11706',rateCategory:'RES_TOU',sharePct:0.52,anchor:false,status:'active',effectiveFrom:'2026-03-01',effectiveTo:null},
       {bp:'US00003326',name:'Elena Vasquez',address:'6 Maple St, Smithtown NY 11787',rateCategory:'RES_TIER',sharePct:0.41,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
       {bp:'US00003327',name:'Thomas Byrne',address:'29 Elm Pl, Commack NY 11725',rateCategory:'RES_TIER',sharePct:0.44,anchor:false,status:'pending',effectiveFrom:'2026-07-01',effectiveTo:null},
@@ -575,9 +578,11 @@ function larkfieldProject(){
       {bp:'US00003331',name:'Rosa Martinez',address:'91 Oak St, Deer Park NY 11729',rateCategory:'RES_TIER',sharePct:0.42,anchor:false,status:'dropped',effectiveFrom:'2025-12-01',effectiveTo:'2026-05-31'}
     ],
     periods:[
-      {period:'Mar 2026', pool:38200.00, status:'posted', runDate:'2026-04-28', adjustments:[]},
-      {period:'Apr 2026', pool:40650.00, status:'posted', runDate:'2026-05-29', adjustments:[]},
-      {period:'May 2026', pool:41000.00, status:'posted', runDate:'2026-06-27', adjustments:[]},
+      {period:'Jan 2026', pool:41182.66, status:'posted', runDate:'2026-02-02', credited:35993.65, residual:5189.01, ficaDoc:'', adjustments:[]},
+      {period:'Feb 2026', pool:34297.14, status:'posted', runDate:'2026-03-02', credited:33386.80, residual:4813.20, ficaDoc:'100005519', adjustments:[]},
+      {period:'Mar 2026', pool:38946.03, status:'posted', runDate:'2026-04-02', credited:34038.83, residual:4907.20, ficaDoc:'', adjustments:[]},
+      {period:'Apr 2026', pool:33571.89, status:'posted', runDate:'2026-05-02', credited:29341.83, residual:4230.06, ficaDoc:'', adjustments:[]},
+      {period:'May 2026', pool:31208.47, status:'posted', runDate:'2026-06-02', credited:27276.20, residual:3932.27, ficaDoc:'', adjustments:[]},
       {period:'Jun 2026', pool:null,     status:'open',   runDate:null,        adjustments:[]}
     ]
   };
@@ -586,21 +591,31 @@ function larkfieldProject(){
 function riverbendProject(){
   return {
     project:{ projectId:'CS-PROJ-11', name:'Riverbend Solar Garden',
-      hostBp:'US00003400', hostName:'Riverbend Municipal Power', hostName2:'',
+      hostBp:'US00003401', hostName:'Riverbend Municipal Power', hostName2:'',
       model:'net_crediting', programType:'CDG_VALUE_STACK', segment:'MUNI', allocableCapacityKw:1200, nameplateKw:1250,
-      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM'],
+      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM','COMM_DEMAND'],
       currentPeriod:'Jun 2026', subscriberCount:184, allocatedPct:78.2,
-      anchorSharePct:12.0, anchorName:'Riverbend Recreation Center' },
+      anchorSharePct:15.0, anchorName:'Riverbend Recreation Center' },
     subscribers:[
-      {bp:'US00003401',name:'Riverbend Recreation Center',address:'800 Park Blvd, Riverbend NY 12010',rateCategory:'SMALL_COMM',sharePct:12.00,anchor:true,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
-      {bp:'US00003402',name:'Grace Community Church',address:'25 Chapel St, Riverbend NY 12010',rateCategory:'SMALL_COMM',sharePct:3.40,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
-      {bp:'US00003403',name:'Olivia Bennett',address:'14 Willow Way, Riverbend NY 12010',rateCategory:'RES_TIER',sharePct:0.55,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null},
-      {bp:'US00003404',name:'Ethan Cole',address:'9 Riverside Dr, Riverbend NY 12010',rateCategory:'RES_TOU',sharePct:0.62,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null}
+      {bp:'US00003401',name:'Riverbend Recreation Center',address:'400 Municipal Plaza, Batavia NY 14020',rateCategory:'COMM_DEMAND',sharePct:15.00,anchor:true,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003402',name:'Gloria Estevez',address:'12 Ellicott St, Batavia NY 14020',rateCategory:'RES_TIER',sharePct:8.50,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003403',name:'Trinity AME Church',address:'88 Jackson St, Batavia NY 14020',rateCategory:'SMALL_COMM',sharePct:9.00,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003404',name:'Wendell Harris',address:'5 Oak Grove Ave, Le Roy NY 14482',rateCategory:'RES_TIER',sharePct:0.75,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003405',name:'Batavia Hardware LLC',address:'230 Main St, Batavia NY 14020',rateCategory:'SMALL_COMM',sharePct:6.20,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003406',name:'Denise Okafor',address:'47 Bank St, Batavia NY 14020',rateCategory:'RES_TOU',sharePct:0.45,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003407',name:'Northgate Apartments LLC',address:'1500 Veterans Way, Batavia NY 14020',rateCategory:'COMM_DEMAND',sharePct:11.00,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003408',name:'Raymond Cho',address:'19 Ross St, Batavia NY 14020',rateCategory:'RES_TOU',sharePct:0.80,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003409',name:'Sunrise Diner Inc',address:'312 W Main St, Batavia NY 14020',rateCategory:'SMALL_COMM',sharePct:7.00,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003410',name:'Patricia Nowak',address:'64 Union St, Le Roy NY 14482',rateCategory:'RES_TIER',sharePct:0.55,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003411',name:'Green Valley Coop',address:'780 Clinton St Rd, Batavia NY 14020',rateCategory:'SMALL_COMM',sharePct:8.50,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003412',name:'Marcus Webb',address:'23 Thomas Ave, Batavia NY 14020',rateCategory:'RES_TIER',sharePct:0.45,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null}
     ],
     periods:[
-      {period:'Mar 2026', pool:24800.00, status:'posted', runDate:'2026-04-27', adjustments:[]},
-      {period:'Apr 2026', pool:26100.00, status:'posted', runDate:'2026-05-28', adjustments:[]},
-      {period:'May 2026', pool:26900.00, status:'posted', runDate:'2026-06-26', adjustments:[]},
+      {period:'Jan 2026', pool:23617.08, status:'posted', runDate:'2026-02-02', credited:18468.56, residual:5148.52, ficaDoc:'', adjustments:[]},
+      {period:'Feb 2026', pool:19884.35, status:'posted', runDate:'2026-03-02', credited:15549.56, residual:4334.79, ficaDoc:'', adjustments:[]},
+      {period:'Mar 2026', pool:21449.72, status:'posted', runDate:'2026-04-02', credited:16773.68, residual:4676.04, ficaDoc:'', adjustments:[]},
+      {period:'Apr 2026', pool:18326.91, status:'posted', runDate:'2026-05-02', credited:14331.64, residual:3995.27, ficaDoc:'', adjustments:[]},
+      {period:'May 2026', pool:17052.60, status:'posted', runDate:'2026-06-02', credited:13335.13, residual:3717.47, ficaDoc:'', adjustments:[]},
       {period:'Jun 2026', pool:null,     status:'open',   runDate:null,        adjustments:[]}
     ]
   };
@@ -1009,8 +1024,8 @@ function initPeriodSelector(){
 }
 
 /* ---- Pool Ledger ---- */
-function periodCredited(p){ return p.pool==null?null:+(p.pool*DATA.project.allocatedPct/100).toFixed(2); }
-function periodResidual(p){ return p.pool==null?null:+(p.pool-periodCredited(p)).toFixed(2); }
+function periodCredited(p){ if(p.pool==null) return null; return (p.credited!=null)?p.credited:+(p.pool*DATA.project.allocatedPct/100).toFixed(2); }
+function periodResidual(p){ if(p.pool==null) return null; return (p.residual!=null)?p.residual:+(p.pool-periodCredited(p)).toFixed(2); }
 function adjNet(p){ return (p.adjustments||[]).reduce((a,x)=>a+x.delta,0); }
 
 function renderPool(){

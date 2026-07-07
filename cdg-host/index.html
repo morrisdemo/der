@@ -593,7 +593,7 @@ function riverbendProject(){
     project:{ projectId:'CS-PROJ-11', name:'Riverbend Solar Garden',
       hostBp:'US00003401', hostName:'Riverbend Municipal Power', hostName2:'',
       model:'net_crediting', programType:'CDG_VALUE_STACK', segment:'MUNI', allocableCapacityKw:1200, nameplateKw:1250,
-      eligibleRateCategories:['USLI-TIER','RES_TIER','RES_TOU','SMALL_COMM','COMM_DEMAND'],
+      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM','COMM_DEMAND'],
       currentPeriod:'Jun 2026', subscriberCount:184, allocatedPct:78.2,
       anchorSharePct:15.0, anchorName:'Riverbend Recreation Center' },
     subscribers:[
@@ -840,7 +840,7 @@ function acctFromExistingSubscriber(key){
   const parts=(s.address||'').split(',').map(t=>t.trim());
   return {ContractAccount:s.ca||s.bp,BusinessPartner:s.bp,Installation:s.anlage,
     SubscriberName:s.name,ServiceAddress:parts[0]||s.address,City:parts[1]||'',State:parts[2]||'NY',PostalCode:parts[3]||'',
-    RateCategory:s.rateCategory,RateSchedule:({USLI-TIER:'EL-RES-TIER-01',RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'}[s.rateCategory]||'')};
+    RateCategory:s.rateCategory,RateSchedule:({RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'}[s.rateCategory]||'')};
 }
 async function lookupAccount(key){
   key=(key||'').trim().toUpperCase();

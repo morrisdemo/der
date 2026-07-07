@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community Solar — Host Manager</title>
+<link rel="stylesheet" href="https://ui5.sap.com/resources/sap/ui/core/themes/base/SAP-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#0070F2;--brand-bg:#EBF5FE;--brand-border:#B8D7F5;
+  --pos:#256F3A;--pos-bg:#F5FAE5;--pos-border:#B6D98C;
+  --crit:#AA0808;--crit-bg:#FFEBEB;--crit-border:#F4AAAA;
+  --warn:#E76500;--warn-bg:#FFF8D6;--warn-border:#F5D44E;
+  --info:#0070F2;--info-bg:#EBF5FE;
+  --neutral:#556B82;--neutral-bg:#EFF1F2;
+  --surf:#FFFFFF;--bg:#F5F6F7;--bg2:#FAFBFC;
+  --bdr:#E5E5E5;--bdr-lt:#F0F1F2;
+  --txt:#1D2D3E;--txt2:#556B82;--txt3:#8396A8;--link:#0064D9;
+  --shadow:0 1px 4px rgba(29,45,62,.05);--shadow-hover:0 4px 16px rgba(29,45,62,.1);
+  --rs:8px;--rm:10px;--pill:100px;
+  --btp:#0A6ED1;--btp-bg:#F0F8FF;--btp-border:#C2DFFB;
+  --transition:all .25s cubic-bezier(.4,0,.2,1)
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'72','IBM Plex Sans',-apple-system,sans-serif;font-size:13px;line-height:1.5;color:var(--txt);background:var(--bg);-webkit-font-smoothing:antialiased;padding-bottom:48px}
+[class^="si-"]::before,[class*=" si-"]::before{font-family:'SAP-icons';font-style:normal;font-weight:normal;display:inline-block;text-align:center;font-size:inherit;line-height:1}
+.si-home::before{content:"\e070"}.si-money::before{content:"\e07c"}.si-chart::before{content:"\e090"}
+.si-tags::before{content:"\e0e4"}.si-cust::before{content:"\e036"}.si-lock::before{content:"\e192"}
+.si-anchor::before{content:"\e0c8"}.si-search::before{content:"\e00d"}.si-close::before{content:"\e03e"}
+.si-cal::before{content:"\e0aa"}.si-conn::before{content:"\e1a3"}.si-tech::before{content:"\e0a0"}
+.si-add::before{content:"\e13e"}.si-edit::before{content:"\e04a"}.si-warn::before{content:"\e1ea"}.si-ledger::before{content:"\e0d0"}
+.mono{font-family:'IBM Plex Mono',monospace;font-weight:600}
+
+/* ===== Header ===== */
+.hdr{background:var(--surf);border-bottom:1px solid var(--bdr);padding:10px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.hdr-icon{display:flex;align-items:center;gap:9px;padding-right:16px;border-right:1px solid var(--bdr)}
+.hdr h2{font-size:16px;font-weight:700;color:var(--txt)}
+.hdr .sub{font-size:11px;color:var(--txt3);font-weight:500;margin-top:1px}
+.src{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--txt2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--pos);box-shadow:0 0 0 0 rgba(37,111,58,.5);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(37,111,58,.4)}70%{box-shadow:0 0 0 5px rgba(37,111,58,0)}100%{box-shadow:0 0 0 0 rgba(37,111,58,0)}}
+.model-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--btp);background:var(--btp-bg);border:1px solid var(--btp-border);padding:3px 10px;border-radius:var(--pill)}
+
+/* ===== Layout ===== */
+.wrap{max-width:1360px;margin:0 auto;padding:20px 24px}
+
+/* ===== Project bar ===== */
+.proj{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rm);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:18px}
+.proj-top{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.proj-id{display:flex;flex-direction:column;gap:3px;min-width:260px}
+.proj-name{font-size:19px;font-weight:700;color:var(--txt);display:flex;align-items:center;gap:9px}
+.proj-meta{font-size:11px;color:var(--txt3);font-weight:500}
+.proj-meta b{color:var(--txt2);font-weight:600}
+.proj-facts{display:flex;gap:26px;margin-left:auto;flex-wrap:wrap}
+.pf{display:flex;flex-direction:column;gap:1px}
+.pf .fl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:600}
+.pf .fv{font-size:13px;font-weight:600;color:var(--txt)}
+
+/* ===== Ledger ===== */
+.ledger{margin-top:18px;padding-top:16px;border-top:1px solid var(--bdr-lt)}
+.ledger-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.ledger-head .t{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:700}
+.ledger-bar{height:16px;background:var(--neutral-bg);border-radius:var(--pill);overflow:hidden;display:flex}
+.seg-anchor{height:100%;background:var(--btp)}
+.seg-sub{height:100%;background:var(--brand)}
+.ledger-legend{display:flex;gap:22px;margin-top:11px;flex-wrap:wrap}
+.lg{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--txt2);font-weight:500}
+.lg .sw{width:11px;height:11px;border-radius:3px}
+.lg b{color:var(--txt);font-weight:700}
+.kpis{display:flex;gap:0;margin-top:16px;border:1px solid var(--bdr-lt);border-radius:var(--rs);overflow:hidden}
+.kpi{flex:1;padding:12px 16px;border-right:1px solid var(--bdr-lt);background:var(--bg2)}
+.kpi:last-child{border-right:none}
+.kpi .kv{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:var(--txt)}
+.kpi .kv.pos{color:var(--pos)}.kpi .kv.btp{color:var(--btp)}
+.kpi .kl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:600;margin-top:2px}
+
+/* ===== Tabs ===== */
+.tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--bdr)}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--txt3);cursor:pointer;border-bottom:2px solid transparent;transition:var(--transition);display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--txt2)}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.tab .badge{font-size:10px;font-weight:700;background:var(--neutral-bg);color:var(--txt2);padding:1px 7px;border-radius:var(--pill)}
+.tab.active .badge{background:var(--brand-bg);color:var(--brand)}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ===== Toolbar ===== */
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.searchbox{position:relative;flex:1;min-width:220px;max-width:340px}
+.searchbox input{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:13px;font-family:inherit;color:var(--txt);background:var(--surf)}
+.searchbox input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-bg)}
+.searchbox .si-search{position:absolute;left:11px;top:9px;color:var(--txt3);font-size:14px}
+.filt{display:flex;align-items:center;gap:6px}
+.filt label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt3);font-weight:600}
+.filt select{padding:7px 10px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:12px;font-family:inherit;color:var(--txt);background:var(--surf);cursor:pointer}
+.filt select:focus{outline:none;border-color:var(--brand)}
+.count{margin-left:auto;font-size:11px;color:var(--txt3);font-weight:500}
+.count b{color:var(--txt2);font-weight:700}
+
+/* ===== Table ===== */
+.tbl-wrap{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rm);box-shadow:var(--shadow);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:700;padding:11px 12px;border-bottom:1px solid var(--bdr);background:var(--bg2);white-space:nowrap;cursor:pointer;user-select:none}
+thead th.num{text-align:right}
+thead th.nosort{cursor:default}
+thead th .sortarr{opacity:.4;font-size:9px;margin-left:3px}
+thead th.sorted .sortarr{opacity:1}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--bdr-lt);font-size:12px;color:var(--txt);vertical-align:middle}
+tbody tr{cursor:pointer;transition:var(--transition)}
+tbody tr:hover{background:var(--brand-bg)}
+tbody tr:last-child td{border-bottom:none}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-top:1px solid var(--bdr);font-size:12px;color:var(--txt2);flex-wrap:wrap}
+.pager .pg-left{display:flex;align-items:center;gap:8px}
+.pager .pg-left label{color:var(--txt3);font-weight:600}
+.pager .pg-rows{padding:4px 8px;border:1px solid var(--bdr);border-radius:var(--rs);background:var(--surf);font-size:12px;font-family:inherit;color:var(--txt);cursor:pointer}
+.pager .pg-range{color:var(--txt3)}
+.pager .pg-nav{display:flex;align-items:center;gap:2px}
+.pager .pg-btn{min-width:28px;height:28px;padding:0 7px;border:1px solid var(--bdr);border-radius:var(--rs);background:var(--surf);color:var(--txt2);font-size:12px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:var(--transition)}
+.pager .pg-btn:hover:not(:disabled):not(.active){background:var(--brand-bg);border-color:var(--brand-border);color:var(--brand)}
+.pager .pg-btn.active{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;cursor:default}
+.pager .pg-btn:disabled{opacity:.4;cursor:not-allowed}
+.pager .pg-ellipsis{padding:0 4px;color:var(--txt3)}
+td.num{text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600}
+.sub-name{font-weight:600;color:var(--txt)}
+.mono-id{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt2);font-weight:600}
+.addr{font-size:11px;color:var(--txt2)}
+.credit{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--pos)}
+.credit.zero{color:var(--txt3);font-weight:600}
+/* ObjectStatus (no filled pills) */
+.objstat{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px}
+.os-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.os-pos{color:var(--pos)}.os-pos .os-dot{background:var(--pos)}
+.os-warn{color:var(--warn)}.os-warn .os-dot{background:var(--warn)}
+.os-neu{color:var(--txt3)}.os-neu .os-dot{background:var(--txt3)}
+.os-info{color:var(--btp)}.os-info .os-dot{background:var(--btp)}
+.os-crit{color:var(--crit)}.os-crit .os-dot{background:var(--crit)}
+/* Rate category — neutral outlined tag; flag only when ineligible */
+.cat{display:inline-block;padding:2px 9px;border:1px solid var(--bdr);border-radius:var(--pill);font-size:11px;font-weight:600;color:var(--txt2);white-space:nowrap}
+.cat.flag{border-color:var(--warn-border);color:var(--warn);background:var(--warn-bg)}
+.cat .si-warn{font-size:10px;margin-right:3px}
+.role-anchor{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--btp)}
+.role-none{color:var(--txt3);font-size:11px}
+
+/* ===== Source tag popover ===== */
+.tag-wrap{position:relative;display:inline-block}
+.tag-pop{visibility:hidden;opacity:0;position:absolute;top:100%;left:0;margin-top:6px;width:300px;background:var(--surf);border:1px solid var(--bdr);border-radius:var(--rs);box-shadow:var(--shadow-hover);padding:12px 14px;z-index:300;transition:var(--transition);display:flex;flex-direction:column;gap:6px}
+.tag-wrap:hover .tag-pop{visibility:visible;opacity:1}
+.tp-title{font-size:12px;font-weight:700;color:var(--txt)}
+.tp-body{font-size:11px;color:var(--txt2);line-height:1.5}
+.tp-arch{margin-top:4px;padding-top:8px;border-top:1px solid var(--bdr-lt);display:flex;flex-direction:column;gap:3px}
+.tp-arch .ar{font-size:10px;color:var(--txt3)}
+.tp-arch .ar strong{color:var(--txt2)}
+.btp-arch{border-top-color:var(--btp-border)}
+.btp-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--btp);cursor:default}
+.s4-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--txt2);cursor:default}
+
+/* ===== Pool Ledger tab ===== */
+.pool-summary{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--bdr);border-radius:var(--rm);overflow:hidden;background:var(--surf);box-shadow:var(--shadow)}
+.ps{flex:1;padding:14px 18px;border-right:1px solid var(--bdr-lt)}
+.ps:last-child{border-right:none}
+.ps .psl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:600}
+.ps .psv{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--txt);margin-top:3px}
+.ps .psv.pos{color:var(--pos)}.ps .psv.btp{color:var(--btp)}
+.pool-note{font-size:11px;color:var(--txt3);margin:0 2px 14px;display:flex;align-items:center;gap:7px}
+.btn-open{padding:6px 12px;border:none;border-radius:var(--rs);font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;background:var(--brand);color:#fff;display:inline-flex;align-items:center;gap:5px}
+.btn-open:hover{background:#0058c4}
+.btn-adj{padding:5px 11px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;background:var(--surf);color:var(--txt2);display:inline-flex;align-items:center;gap:5px}
+.btn-adj:hover{background:var(--bg2);border-color:var(--brand-border);color:var(--brand)}
+.adj-mini{font-size:10px;color:var(--warn);font-weight:600;margin-top:3px;display:flex;align-items:center;gap:4px}
+.enter-dash{color:var(--txt3);font-style:italic}
+
+/* ===== Drawer ===== */
+.overlay{position:fixed;inset:0;background:rgba(29,45,62,.28);opacity:0;visibility:hidden;transition:var(--transition);z-index:200}
+.overlay.open{opacity:1;visibility:visible}
+.drawer{position:fixed;top:0;right:0;height:100%;width:452px;max-width:92vw;background:var(--surf);box-shadow:-4px 0 24px rgba(29,45,62,.15);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:201;display:flex;flex-direction:column}
+.drawer.open{transform:translateX(0)}
+.dw-hdr{padding:18px 22px;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;gap:12px}
+.dw-hdr .av{width:38px;height:38px;border-radius:var(--rs);background:var(--brand-bg);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.dw-hdr .nm{font-size:15px;font-weight:700;color:var(--txt)}
+.dw-hdr .mt{font-size:11px;color:var(--txt3);font-family:'IBM Plex Mono',monospace;font-weight:600}
+.dw-close{margin-left:auto;background:none;border:none;color:var(--txt3);font-size:16px;cursor:pointer;padding:4px}
+.dw-close:hover{color:var(--txt)}
+.dw-body{flex:1;overflow-y:auto;padding:8px 0}
+.dw-sec{padding:14px 22px;border-bottom:1px solid var(--bdr-lt)}
+.dw-sec:last-child{border-bottom:none}
+.dw-sec-t{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.dw-sec-t .owned{margin-left:auto;font-size:9px;font-weight:600;color:var(--btp);background:var(--btp-bg);border:1px solid var(--btp-border);padding:1px 7px;border-radius:var(--pill);letter-spacing:.02em}
+.dw-sec-t .lockedtag{margin-left:auto;font-size:9px;font-weight:600;color:var(--txt3);border:1px solid var(--bdr);padding:1px 7px;border-radius:var(--pill);letter-spacing:.02em;display:inline-flex;align-items:center;gap:4px}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px}
+.dr .l{color:var(--txt3);font-weight:500}
+.dr .v{color:var(--txt);font-weight:600;text-align:right}
+.dr .v.mono{font-family:'IBM Plex Mono',monospace}
+.dr.lockrow .l,.dr.lockrow .v{color:var(--txt3)}
+.dr.lockrow{background:var(--bg2);margin:0 -22px;padding:6px 22px}
+.locknote{font-size:10px;color:var(--txt3);margin-top:8px;display:flex;align-items:center;gap:6px;font-style:italic;line-height:1.5}
+.dw-foot{padding:14px 22px;border-top:1px solid var(--bdr);display:flex;gap:10px}
+.btn{flex:1;padding:9px;border-radius:var(--rs);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--bdr);background:var(--surf);color:var(--txt2);transition:var(--transition)}
+.btn:hover{background:var(--bg2)}
+.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.primary:hover{background:#0058c4}
+.btn.primary:disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-note{font-size:10px;color:var(--txt3);text-align:center;padding:0 22px 12px;font-style:italic}
+/* drawer form */
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--txt3);font-weight:600;margin-bottom:5px}
+.fld input,.fld textarea,.fld select{width:100%;padding:9px 11px;border:1px solid var(--bdr);border-radius:var(--rs);font-size:13px;font-family:inherit;color:var(--txt);background:var(--surf)}
+.fld input.money{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-bg)}
+.fld .hint{font-size:10px;color:var(--txt3);margin-top:4px}
+.recon-box{background:var(--bg2);border:1px solid var(--bdr-lt);border-radius:var(--rs);padding:12px 14px;margin-top:6px}
+.recon-box .rr{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+.recon-box .rr .rl{color:var(--txt3)}
+.recon-box .rr .rv{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--txt)}
+.recon-box .rr.tot{border-top:1px solid var(--bdr);margin-top:5px;padding-top:7px}
+.recon-box .rr.tot .rv{color:var(--pos)}
+
+/* ===== Edit-drawer validation & lookup ===== */
+.fld input.invalid{border-color:var(--crit);box-shadow:0 0 0 2px var(--crit-bg)}
+.fld .vmsg{font-size:10px;font-weight:600;margin-top:4px;display:none}
+.fld .vmsg.err{color:var(--crit);display:block}
+.fld .vmsg.ok{color:var(--pos);display:block}
+.fld .vmsg.warn{color:var(--warn);display:block}
+.cap-bar{height:10px;background:var(--neutral-bg);border-radius:var(--pill);overflow:hidden;display:flex;margin:6px 0}
+.cap-used{height:100%;background:var(--brand)}
+.cap-new{height:100%;background:var(--pos)}
+.cap-over{height:100%;background:var(--crit)}
+.cap-legend{display:flex;justify-content:space-between;font-size:10px;color:var(--txt2);font-weight:600}
+.cap-legend .over{color:var(--crit)}
+.lookup-row{display:flex;gap:8px;align-items:flex-end}
+.lookup-row .fld{flex:1;margin-bottom:0}
+.lookup-btn{padding:9px 14px;border:1px solid var(--brand);border-radius:var(--rs);background:var(--brand);color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap}
+.lookup-btn:hover{background:#0058c4}
+.hydrated{background:var(--pos-bg);border:1px solid var(--pos-border);border-radius:var(--rs);padding:10px 12px;margin-top:10px}
+.hydrated .hr{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
+.hydrated .hr .hl{color:var(--txt3)}
+.hydrated .hr .hv{font-weight:600;color:var(--txt);text-align:right}
+.hydrated .htitle{font-size:10px;font-weight:700;color:var(--pos);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.toggle-row{display:flex;align-items:center;gap:10px;padding:9px 0}
+.toggle-row .tlabel{font-size:12px;font-weight:600;color:var(--txt)}
+.switch{position:relative;width:38px;height:20px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--neutral-bg);border-radius:20px;transition:.2s}
+.slider:before{content:"";position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked+.slider{background:var(--btp)}
+.switch input:checked+.slider:before{transform:translateX(18px)}
+.switch input:disabled+.slider{opacity:.4;cursor:not-allowed}
+.commit-preview{background:var(--btp-bg);border:1px solid var(--btp-border);border-radius:var(--rs);padding:10px 12px;margin-top:10px;font-size:11px;color:var(--txt2);line-height:1.5}
+.commit-preview .cp-t{font-size:10px;font-weight:700;color:var(--btp);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.commit-preview code{font-family:'IBM Plex Mono',monospace;color:var(--txt);font-weight:600}
+/* pending-sync marker */
+.sync-pending{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--warn)}
+.sync-pending .sdot{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.sync-synced{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--txt3)}
+.alloc-hist{margin-top:4px}
+.alloc-hist .ah{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--bdr-lt)}
+.alloc-hist .ah:last-child{border-bottom:none}
+.alloc-hist .ah .ap{color:var(--txt2);font-weight:600}
+.alloc-hist .ah .av{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.alloc-hist .ah .av.zero{color:var(--txt3)}
+.dw-danger{padding:14px 22px}
+.btn.danger{background:var(--surf);color:var(--crit);border-color:var(--crit-border)}
+.btn.danger:hover{background:var(--crit-bg)}
+
+/* ===== Portfolio & shell nav ===== */
+.pf-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.pf-title{font-size:22px;font-weight:700;color:var(--txt)}
+.pf-sub{font-size:12px;color:var(--txt3);margin-top:3px}
+.pf-kpis{display:flex;gap:0;margin-bottom:18px;border:1px solid var(--bdr);border-radius:var(--rm);overflow:hidden;background:var(--surf);box-shadow:var(--shadow)}
+.pf-kpis .pk{flex:1;padding:14px 18px;border-right:1px solid var(--bdr-lt)}
+.pf-kpis .pk:last-child{border-right:none}
+.pf-kpis .pkv{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:700;color:var(--txt)}
+.pf-kpis .pkv.pos{color:var(--pos)}.pf-kpis .pkv.warn{color:var(--warn)}.pf-kpis .pkv.btp{color:var(--btp)}
+.pf-kpis .pkl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--txt3);font-weight:600;margin-top:3px}
+#pfBody tr{cursor:pointer}
+.pf-projname{font-weight:700;color:var(--txt)}
+.pf-projid{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--txt3);font-weight:600}
+.seg-tag{display:inline-block;padding:2px 8px;border:1px solid var(--bdr);border-radius:var(--pill);font-size:10px;font-weight:700;color:var(--txt2);letter-spacing:.03em}
+.prog-tag{display:inline-block;padding:2px 8px;border:1px solid var(--btp-border);border-radius:var(--pill);font-size:10px;font-weight:600;color:var(--btp);letter-spacing:.02em;white-space:nowrap}
+.fica-ref{font-size:10px;color:var(--txt3);margin-top:3px;font-family:'IBM Plex Mono',monospace}
+.mini-bar{height:8px;width:80px;background:var(--neutral-bg);border-radius:var(--pill);overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}
+.mini-fill{height:100%;background:var(--brand)}
+.mini-fill.high{background:var(--warn)}
+.att-none{color:var(--txt3);font-size:11px}
+.att-flag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--warn)}
+.att-flag .si-warn{font-size:11px}
+.crumb{font-size:12px;color:var(--txt3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.crumb a{color:var(--link);cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.crumb a:hover{text-decoration:underline}
+.crumb .sep{color:var(--txt3)}
+.proj-switch{font-family:inherit;font-size:12px;font-weight:600;color:var(--txt2);border:1px solid var(--bdr);border-radius:var(--rs);padding:3px 8px;background:var(--surf);cursor:pointer;margin-left:4px}
+.proj-switch:focus{outline:none;border-color:var(--brand)}
+
+/* ===== Footer ===== */
+.int-footer{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1px solid var(--bdr);padding:9px 24px;display:flex;align-items:center;gap:12px;font-size:11px;color:var(--txt3);z-index:90}
+.int-footer strong{color:var(--brand);font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-icon">
+    <img src="https://raw.githubusercontent.com/morrisdemo/images/d4f2b84a25e2fd4139f896184e429ec0e875ae2a/sap_logo.svg" alt="SAP" style="height:22px">
+    <span style="font-size:11px;font-weight:600;color:var(--txt3)">BTP Application</span>
+  </div>
+  <div>
+    <h2>Community Solar — Host Manager</h2>
+    <div class="sub">Project roster &amp; share administration</div>
+  </div>
+  <span class="model-badge" id="modelBadge" style="margin-left:auto;display:none"><span class="si-money"></span> <span id="modelText">Value Stack — Net Crediting</span></span>
+  <span class="src"><span class="dot"></span> S/4HANA · Live</span>
+</div>
+
+<!-- ===== PORTFOLIO (home) ===== -->
+<div class="wrap" id="portfolioView" style="display:none">
+  <div class="pf-head">
+    <div>
+      <h1 class="pf-title">Community Solar — Project Portfolio</h1>
+      <div class="pf-sub">Select a project to manage its roster and pool ledger</div>
+    </div>
+  </div>
+  <div class="pf-kpis" id="pfKpis"></div>
+  <div class="toolbar">
+    <div class="searchbox"><span class="si-search"></span>
+      <input type="text" id="pfSearch" placeholder="Search projects or hosts…" oninput="renderPortfolio()"></div>
+    <div class="filt"><label>Segment</label>
+      <select id="pfSeg" onchange="renderPortfolio()">
+        <option value="all">All</option><option value="IOU">IOU</option><option value="MUNI">Muni</option><option value="COOP">Co-op</option><option value="PUBLIC">Public Power</option>
+      </select></div>
+    <div class="filt"><label>Program Type</label>
+      <select id="pfType" onchange="renderPortfolio()">
+        <option value="all">All</option>
+        <option value="CDG_VALUE_STACK">Value Stack (VDER)</option>
+        <option value="CDG_KWH_NET_ENERGY">kWh Net Energy</option>
+        <option value="COMMUNITY_NET_METERING">Community Net Metering</option>
+        <option value="SUBSCRIPTION_PPA">Subscription / PPA</option>
+      </select></div>
+    <span class="count" id="pfCount">—</span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th class="nosort">Project</th>
+        <th class="nosort">Host</th>
+        <th class="nosort">Segment</th>
+        <th class="nosort">Program Type</th>
+        <th class="nosort">Model</th>
+        <th class="num nosort">Capacity</th>
+        <th class="num nosort">Allocated</th>
+        <th class="num nosort">Subscribers</th>
+        <th class="nosort">Current Period</th>
+        <th class="nosort">Attention</th>
+      </tr></thead>
+      <tbody id="pfBody"></tbody>
+    </table>
+  </div>
+  <div style="height:40px"></div>
+</div>
+
+<!-- ===== HOST MANAGER (project workspace) ===== -->
+<div class="wrap" id="managerView" style="display:none">
+
+  <div class="crumb"><a onclick="goPortfolio()"><span class="si-home"></span> Portfolio</a> <span class="sep">›</span> <span id="crumbProj">—</span></div>
+
+  <!-- Project bar -->
+  <div class="proj">
+    <div class="proj-top">
+      <div class="proj-id">
+        <div class="proj-name"><span class="si-home" style="color:var(--brand)"></span> <span id="projName">—</span>
+          <select id="projSwitch" class="proj-switch" onchange="openProject(this.value)"></select>
+        </div>
+        <div class="proj-meta">Host: <b id="projHost">—</b> · <span id="projId" class="mono"></span></div>
+      </div>
+      <div class="proj-facts">
+        <div class="pf"><span class="fl">Allocable Capacity</span><span class="fv mono" id="projCap">—</span></div>
+        <div class="pf"><span class="fl">Program Model</span><span class="fv" id="projModel">—</span></div>
+        <div class="pf"><span class="fl">Eligible Categories</span><span class="fv" id="projElig" style="font-size:11px">—</span></div>
+      </div>
+    </div>
+
+    <div class="ledger">
+      <div class="ledger-head">
+        <span class="t">Share Ledger — Project Allocation</span>
+        <span class="tag-wrap">
+          <span class="btp-tag">◆ BTP — Z_I_CS_ALLOCATION</span>
+          <span class="tag-pop">
+            <span class="tp-title"><span style="color:var(--btp)">◆</span> Share Ledger</span>
+            <span class="tp-body">Aggregate of each subscriber's dated CDG-SHARE fact. The underlying shares are standard installation facts; the roll-up is the Clean Core extension.</span>
+            <div class="tp-arch btp-arch">
+              <span class="ar"><strong>Aggregation:</strong> Z_I_CS_ALLOCATION (BTP CDS view)</span>
+              <span class="ar"><strong>Underlying fact:</strong> CDG-SHARE (dated rate fact on installation — standard IS-U)</span>
+              <span class="ar"><strong>Platform:</strong> SAP BTP + Integration Suite</span>
+            </div>
+          </span>
+        </span>
+      </div>
+      <div class="ledger-bar">
+        <div class="seg-anchor" id="segAnchor" style="width:0%"></div>
+        <div class="seg-sub" id="segSub" style="width:0%"></div>
+      </div>
+      <div class="ledger-legend">
+        <span class="lg"><span class="sw" style="background:var(--btp)"></span> Anchor <b id="lgAnchor">—</b></span>
+        <span class="lg"><span class="sw" style="background:var(--brand)"></span> Subscribers <b id="lgSub">—</b></span>
+        <span class="lg"><span class="sw" style="background:var(--neutral-bg)"></span> Available <b id="lgAvail">—</b></span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="kv" id="kpiSubs">—</div><div class="kl">Subscribers</div></div>
+        <div class="kpi"><div class="kv btp" id="kpiAlloc">—</div><div class="kl">Capacity Allocated</div></div>
+        <div class="kpi"><div class="kv pos" id="kpiAvail">—</div><div class="kl">Available Capacity</div></div>
+        <div class="kpi"><div class="kv pos" id="kpiCredited" style="font-size:15px">—</div><div class="kl">Credited This Period</div></div>
+        <div class="kpi"><div class="kv" id="kpiAnchor" style="font-size:13px">—</div><div class="kl">Anchor Satellite</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-panel="roster" onclick="switchTab('roster')"><span class="si-cust"></span> Roster <span class="badge" id="tabRosterCount">—</span></div>
+    <div class="tab" data-panel="pool" onclick="switchTab('pool')"><span class="si-ledger"></span> Pool Ledger <span class="badge" id="tabPoolCount">—</span></div>
+  </div>
+
+  <!-- ===== ROSTER PANEL ===== -->
+  <div class="panel active" id="panel-roster">
+    <div class="toolbar">
+      <div class="searchbox">
+        <span class="si-search"></span>
+        <input type="text" id="search" placeholder="Search by name, BP, or address…" oninput="renderRoster()">
+      </div>
+      <div class="filt">
+        <label>Status</label>
+        <select id="fStatus" onchange="renderRoster()">
+          <option value="all">All</option><option value="active">Active</option><option value="pending">Pending</option><option value="dropped">Dropped</option>
+        </select>
+      </div>
+      <div class="filt">
+        <label>Rate Category</label>
+        <select id="fCat" onchange="renderRoster()">
+          <option value="all">All</option><option value="RES_TIER">Residential — Tiered</option><option value="RES_TOU">Residential — TOU</option><option value="SMALL_COMM">Small Commercial</option><option value="COMM_DEMAND">Commercial — Demand</option>
+        </select>
+      </div>
+      <div class="filt">
+        <label>Period</label>
+        <select id="fPeriod" onchange="renderRoster()"></select>
+      </div>
+      <span class="count" id="rowCount">—</span>
+      <button class="btn-open" style="margin-left:12px" onclick="openAddSubscriber()"><span class="si-add"></span> Add Subscriber</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="bp">BP · CA <span class="sortarr"></span></th>
+            <th data-sort="installation">Installation <span class="sortarr"></span></th>
+            <th data-sort="name">Subscriber <span class="sortarr"></span></th>
+            <th class="nosort">Service Address</th>
+            <th data-sort="rateCategory">Rate Category <span class="sortarr"></span></th>
+            <th class="num" data-sort="sharePct">Share % <span class="sortarr"></span></th>
+            <th class="num" data-sort="creditPeriod" id="creditColHdr">Credit <span class="sortarr"></span></th>
+            <th data-sort="anchor">Role <span class="sortarr"></span></th>
+            <th data-sort="status">Status <span class="sortarr"></span></th>
+            <th class="nosort" id="syncColHdr" style="display:none">Sync</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="pager" id="rosterPager"></div>
+    </div>
+  </div>
+
+  <!-- ===== POOL LEDGER PANEL ===== -->
+  <div class="panel" id="panel-pool">
+    <div class="pool-summary" id="poolSummary"></div>
+    <div class="pool-note">
+      <span class="tag-wrap">
+        <span class="btp-tag">◆ Settlement-fed</span>
+        <span class="tag-pop">
+          <span class="tp-title"><span style="color:var(--btp)">◆</span> Value Stack Pool</span>
+          <span class="tp-body">The settled pool value is received per period from the upstream Value Stack / VDER settlement — SAP receives it, it does not compute the Value Stack. The allocation run slices the pool by current shares and posts through FI-CA.</span>
+          <div class="tp-arch btp-arch">
+            <span class="ar"><strong>Input:</strong> Value Stack settlement feed (monthly, per period)</span>
+            <span class="ar"><strong>Allocation:</strong> pool × CDG-SHARE → dated CDG-SMAC fact</span>
+            <span class="ar"><strong>Posting:</strong> FI-CA three-way settlement</span>
+          </div>
+        </span>
+      </span>
+      <span>Posted periods are never overwritten — corrections post as dated, reason-coded adjustments.</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-sortp="period">Period <span class="sortarr"></span></th>
+            <th class="num nosort">Settled Pool</th>
+            <th class="num nosort">Credited (87.4%)</th>
+            <th class="num nosort">Residual</th>
+            <th class="num nosort">Subscribers</th>
+            <th class="nosort">Status</th>
+            <th class="nosort">Run Date</th>
+            <th class="nosort" style="text-align:right">Action</th>
+          </tr>
+        </thead>
+        <tbody id="poolBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Drawer (subscriber detail / pool actions) ===== -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dw-hdr">
+    <div class="av"><span id="dwIcon" class="si-cust"></span></div>
+    <div>
+      <div class="nm" id="dwName">—</div>
+      <div class="mt" id="dwBp">—</div>
+    </div>
+    <button class="dw-close" onclick="closeDrawer()"><span class="si-close"></span></button>
+  </div>
+  <div class="dw-body" id="dwBody"></div>
+  <div class="dw-foot" id="dwFoot"></div>
+  <div class="btn-note" id="dwFootNote"></div>
+</div>
+
+<div class="int-footer">
+  <strong>SAP</strong>
+  <span>Community Solar Host Manager — S/4HANA Utilities + BTP</span>
+  <span style="margin-left:auto">Clean Core Extension</span>
+</div>
+
+<script>
+/* =========================================================================
+   DATA LAYER  —  CDS View / OData ready
+   Renderer consumes a clean {project, subscribers[], periods[]} object.
+   Resolution chain: localStorage -> demo-scenarios.json -> defaults.
+   Live: swap resolve() internals for OData calls (Z_I_CS_PROJECT,
+   Z_I_CS_ALLOCATION, Z_I_CS_POOL_LEDGER) — shape unchanged.
+   ========================================================================= */
+
+const P = new URLSearchParams(window.location.search);
+const PROJECT_ID = P.get('project') || 'CS-PROJ-0007';
+const MODEL_OVERRIDE = P.get('model');
+
+const RATE_LABELS = {RES_TIER:'Residential — Tiered',RES_TOU:'Residential — TOU',SMALL_COMM:'Small Commercial',COMM_DEMAND:'Commercial — Demand'};
+const RATE_SCHEDULE = {RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'};
+const CAT_SHORT = {RES_TIER:'Res-Tier',RES_TOU:'Res-TOU',SMALL_COMM:'Sm-Comm',COMM_DEMAND:'Comm-Dem'};
+
+/* Installation derives from BP by standard alpha-swap: US000nnnnn -> USA00nnnnn (3rd char -> A). CA mirrors BP. */
+function instFromBp(bp){ return bp.slice(0,2)+'A'+bp.slice(3); }
+
+function larkfieldProject(){
+  return {
+    project:{
+      projectId:'CS-PROJ-07', name:'Larkfield Community Solar',
+      hostBp:'US00003300', hostName:'Larkfield Solar Partners LLC',
+      model:'net_crediting', programType:'CDG_VALUE_STACK', segment:'IOU', allocableCapacityKw:1800, nameplateKw:1875,
+      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM','COMM_DEMAND'],
+      currentPeriod:'Jun 2026', subscriberCount:312, allocatedPct:87.4,
+      anchorSharePct:15.0, anchorName:'Harborview Center'
+    },
+    subscribers:[
+      {bp:'US00003320',name:'Sarah Whitfield',address:'42 Bayview Ave, Northport NY 11768',rateCategory:'RES_TIER',sharePct:0.45,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003321',name:'Marcus Delgado',address:'205 Ocean Ave, Bay Shore NY 11706',rateCategory:'RES_TOU',sharePct:0.60,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003322',name:'Harborview Center',address:'1200 Sunrise Hwy, Islip NY 11751',rateCategory:'COMM_DEMAND',sharePct:15.00,anchor:true,status:'active',effectiveFrom:'2025-11-01',effectiveTo:null},
+      {bp:'US00003323',name:'Priya Nair',address:'88 Larkfield Rd, East Northport NY 11731',rateCategory:'RES_TIER',sharePct:0.38,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null},
+      {bp:'US00003324',name:"Delgado's Bakery",address:'340 Main St, Huntington NY 11743',rateCategory:'SMALL_COMM',sharePct:2.10,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003325',name:'James Okonkwo',address:'17 Pine Aire Dr, Bay Shore NY 11706',rateCategory:'RES_TOU',sharePct:0.52,anchor:false,status:'active',effectiveFrom:'2026-03-01',effectiveTo:null},
+      {bp:'US00003326',name:'Elena Vasquez',address:'6 Maple St, Smithtown NY 11787',rateCategory:'RES_TIER',sharePct:0.41,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003327',name:'Thomas Byrne',address:'29 Elm Pl, Commack NY 11725',rateCategory:'RES_TIER',sharePct:0.44,anchor:false,status:'pending',effectiveFrom:'2026-07-01',effectiveTo:null},
+      {bp:'US00003328',name:'Suffolk Dental PLLC',address:'500 Veterans Memorial Hwy, Hauppauge NY 11788',rateCategory:'SMALL_COMM',sharePct:1.85,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003329',name:'Aisha Rahman',address:'73 Larkfield Rd, East Northport NY 11731',rateCategory:'RES_TOU',sharePct:0.55,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null},
+      {bp:'US00003330',name:'Daniel Kim',address:'14 Cedar Ln, Kings Park NY 11754',rateCategory:'RES_TIER',sharePct:0.39,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003331',name:'Rosa Martinez',address:'91 Oak St, Deer Park NY 11729',rateCategory:'RES_TIER',sharePct:0.42,anchor:false,status:'dropped',effectiveFrom:'2025-12-01',effectiveTo:'2026-05-31'}
+    ],
+    periods:[
+      {period:'Mar 2026', pool:38200.00, status:'posted', runDate:'2026-04-28', adjustments:[]},
+      {period:'Apr 2026', pool:40650.00, status:'posted', runDate:'2026-05-29', adjustments:[]},
+      {period:'May 2026', pool:41000.00, status:'posted', runDate:'2026-06-27', adjustments:[]},
+      {period:'Jun 2026', pool:null,     status:'open',   runDate:null,        adjustments:[]}
+    ]
+  };
+}
+// Light projects — portfolio summary + a small roster (demo depth lives on Larkfield).
+function riverbendProject(){
+  return {
+    project:{ projectId:'CS-PROJ-11', name:'Riverbend Solar Garden',
+      hostBp:'US00003400', hostName:'Riverbend Municipal Power', hostName2:'',
+      model:'net_crediting', programType:'CDG_VALUE_STACK', segment:'MUNI', allocableCapacityKw:1200, nameplateKw:1250,
+      eligibleRateCategories:['RES_TIER','RES_TOU','SMALL_COMM'],
+      currentPeriod:'Jun 2026', subscriberCount:184, allocatedPct:78.2,
+      anchorSharePct:12.0, anchorName:'Riverbend Recreation Center' },
+    subscribers:[
+      {bp:'US00003401',name:'Riverbend Recreation Center',address:'800 Park Blvd, Riverbend NY 12010',rateCategory:'SMALL_COMM',sharePct:12.00,anchor:true,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003402',name:'Grace Community Church',address:'25 Chapel St, Riverbend NY 12010',rateCategory:'SMALL_COMM',sharePct:3.40,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null},
+      {bp:'US00003403',name:'Olivia Bennett',address:'14 Willow Way, Riverbend NY 12010',rateCategory:'RES_TIER',sharePct:0.55,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null},
+      {bp:'US00003404',name:'Ethan Cole',address:'9 Riverside Dr, Riverbend NY 12010',rateCategory:'RES_TOU',sharePct:0.62,anchor:false,status:'active',effectiveFrom:'2026-02-01',effectiveTo:null}
+    ],
+    periods:[
+      {period:'Mar 2026', pool:24800.00, status:'posted', runDate:'2026-04-27', adjustments:[]},
+      {period:'Apr 2026', pool:26100.00, status:'posted', runDate:'2026-05-28', adjustments:[]},
+      {period:'May 2026', pool:26900.00, status:'posted', runDate:'2026-06-26', adjustments:[]},
+      {period:'Jun 2026', pool:null,     status:'open',   runDate:null,        adjustments:[]}
+    ]
+  };
+}
+function summitProject(){
+  return {
+    project:{ projectId:'CS-PROJ-14', name:'Summit Co-op Solar Farm',
+      hostBp:'US00003500', hostName:'Summit Rural Electric Co-op',
+      model:'kwh_net_energy', programType:'CDG_KWH_NET_ENERGY', segment:'COOP', allocableCapacityKw:2400, nameplateKw:2500,
+      eligibleRateCategories:['RES_TIER','SMALL_COMM','COMM_DEMAND'],
+      currentPeriod:'May 2026', subscriberCount:263, allocatedPct:94.6,
+      anchorSharePct:18.0, anchorName:'Summit Grain Cooperative' },
+    subscribers:[
+      {bp:'US00003501',name:'Summit Grain Cooperative',address:'1500 County Rd 9, Summit NY 13820',rateCategory:'COMM_DEMAND',sharePct:18.00,anchor:true,status:'active',effectiveFrom:'2025-10-01',effectiveTo:null},
+      {bp:'US00003502',name:'Hilltop Dairy Farm',address:'420 Ridge Rd, Summit NY 13820',rateCategory:'COMM_DEMAND',sharePct:6.20,anchor:false,status:'active',effectiveFrom:'2025-11-01',effectiveTo:null},
+      {bp:'US00003503',name:'Nathan Brooks',address:'7 Meadow Ln, Summit NY 13820',rateCategory:'RES_TIER',sharePct:0.48,anchor:false,status:'active',effectiveFrom:'2026-01-01',effectiveTo:null}
+    ],
+    // kWh model — pool figures are kWh, not $ (model=kwh_net_energy); May is the open period here
+    periods:[
+      {period:'Mar 2026', pool:118500.00, status:'posted', runDate:'2026-04-25', adjustments:[]},
+      {period:'Apr 2026', pool:121200.00, status:'posted', runDate:'2026-05-26', adjustments:[]},
+      {period:'May 2026', pool:null,      status:'open',   runDate:null,        adjustments:[]}
+    ]
+  };
+}
+
+/* Portfolio = all projects, keyed by projectId. */
+function defaultPortfolio(){
+  const list=[larkfieldProject(), riverbendProject(), summitProject()];
+  const map={}; list.forEach(p=>{ map[p.project.projectId]=p; });
+  return map;
+}
+// Back-compat single-project accessor used throughout the Host Manager view.
+function defaultData(){ return larkfieldProject(); }
+
+/* ---- Portfolio state ---- */
+let PORTFOLIO = resolvePortfolio();     // { projectId: {project, subscribers, periods} }
+let selectedProjectId = P.get('project') || null;   // null => show portfolio landing
+let DATA = null;                         // the currently-selected project's data
+
+function resolvePortfolio(){
+  // Mock/offline: localStorage overlay per project, else defaults.
+  const base = defaultPortfolio();
+  try{
+    Object.keys(base).forEach(pid=>{
+      const s=localStorage.getItem('hostmgr_'+pid);
+      if(s){ base[pid]=JSON.parse(s); }
+    });
+  }catch(e){}
+  return base;
+}
+function resolve(){ return selectedProjectId && PORTFOLIO[selectedProjectId] ? PORTFOLIO[selectedProjectId] : defaultData(); }
+
+/* =========================================================================
+   LIVE PATH — reads the published OData V2 CDS services (?live=1).
+   Three separate @OData.publish services:
+     ZI_CDG_PROJECT_CDS / ZI_CDG_ALLOCATION_CDS / ZI_CDG_POOL_LEDGER_CDS
+   V2 wraps rows in { d: { results: [...] } }. Falls back to mock on any error.
+   Set the service host via ?host= (or same-origin when served through Fiori/BTP).
+   ========================================================================= */
+const LIVE = P.get('live')==='1';
+const SVC_HOST = P.get('host') || '';   // e.g. https://my-s4-host:44300 ; empty = same-origin
+const ODATA_BASE = SVC_HOST + '/sap/opu/odata/sap/';
+
+async function odataGet(service, entity){
+  const url = ODATA_BASE + service + '/' + entity + '?$format=json';
+  const res = await fetch(url, { headers:{ 'Accept':'application/json' }, credentials:'include' });
+  if(!res.ok) throw new Error(service+' '+res.status);
+  const j = await res.json();
+  return (j && j.d && j.d.results) ? j.d.results : [];
+}
+
+// OData edm string amounts/decimals come back as strings — coerce.
+function num(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
+// program_type: normalize whatever the payload carries to a known code; derive from model if absent.
+const PROGRAM_TYPE_LABELS = {
+  CDG_VALUE_STACK:'Value Stack (VDER)',
+  CDG_KWH_NET_ENERGY:'kWh Net Energy',
+  COMMUNITY_NET_METERING:'Community Net Metering',
+  SUBSCRIPTION_PPA:'Subscription / PPA'
+};
+function normProgramType(v){
+  if(!v) return null;
+  const k=String(v).trim().toUpperCase();
+  return PROGRAM_TYPE_LABELS[k] ? k : k;   // pass through known + unknown codes
+}
+function programTypeLabel(pt, model){
+  if(pt && PROGRAM_TYPE_LABELS[pt]) return PROGRAM_TYPE_LABELS[pt];
+  if(pt) return pt;
+  // fallback: derive from settlement model when program_type not populated
+  return model==='kwh_net_energy' ? 'kWh Net Energy' : 'Value Stack (VDER)';
+}
+function programTypeCode(pd){
+  return pd.project.programType || (pd.project.model==='kwh_net_energy'?'CDG_KWH_NET_ENERGY':'CDG_VALUE_STACK');
+}
+// V2 edm.DateTime often "/Date(1735689600000)/"; ZI dates are edm.Date "YYYY-MM-DD" here.
+function odDate(v){ if(!v) return null; const m=/\/Date\((\d+)/.exec(v); if(m){ return new Date(+m[1]).toISOString().slice(0,10);} return String(v).slice(0,10); }
+
+function mapToDataShape(projRows, allocRows, poolRows){
+  const p = projRows[0] || {};
+  const project = {
+    projectId: p.ProjectId, name: p.ProjectName,
+    hostBp: p.HostBP, hostName: p.HostName,
+    model: (p.Model==='KWH_NET_ENERGY'||p.Model==='KWH_BANKING'||p.SettlementModel==='KWH_BANKING') ? 'kwh_net_energy' : 'net_crediting',
+    // program_type is the regulatory/product classification (separate from settlement mechanics in `model`).
+    // Defensive: accept ProgramType alias or raw program_type from the OData payload.
+    programType: normProgramType(p.ProgramType || p.Program_Type || p.program_type),
+    allocableCapacityKw: num(p.AllocableKw), nameplateKw: num(p.NameplateKw),
+    eligibleRateCategories: (p.EligibleCategories||'').split(',').map(s=>s.trim()).filter(Boolean),
+    currentPeriod: (p.CurrentPeriod||'').replace('-',' ').replace(/^(\d{4}) (\d{2})$/, (m,y,mo)=>({ '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' }[mo]+' '+y)),
+    subscriberCount: parseInt(p.SubscriberCount,10)||0,
+    allocatedPct: num(p.AllocatedPct),
+    segment: p.UtilitySegment || p.Segment || 'IOU',
+    anchorSharePct: 0, anchorName: p.AnchorName
+  };
+  const subscribers = allocRows.map(r=>({
+    bp:r.SubscriberBP, ca:r.SubscriberCA, anlage:r.Installation, name:r.SubscriberName,
+    address:[r.ServiceAddress, r.City, r.State, r.PostalCode].filter(Boolean).join(', '),
+    rateCategory:r.RateCategory, sharePct:num(r.SharePct),
+    anchor:(r.AnchorFlag==='X'), status:(r.Status||'').toLowerCase(),
+    effectiveFrom:odDate(r.EffectiveFrom), effectiveTo:odDate(r.EffectiveTo)
+  }));
+  const anchor = subscribers.find(s=>s.anchor);
+  if(anchor){ project.anchorSharePct = anchor.sharePct; project.anchorName = anchor.name; }
+  const MON={ '01':'Jan','02':'Feb','03':'Mar','04':'Apr','05':'May','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' };
+  const periods = poolRows.map(r=>{
+    const [y,mo]=(r.Period||'').split('-');
+    return { period:(MON[mo]||mo)+' '+y, pool:(r.IsPosted==='X'?num(r.PoolAmount):null),
+             status:(r.Status||'').toLowerCase(), runDate:odDate(r.RunDate), adjustments:[],
+             ficaDoc:r.FiCaDocument, feedRef:r.FeedReference };
+  });
+  return { project, subscribers, periods };
+}
+
+async function resolveLive(){
+  const [proj, alloc, pool] = await Promise.all([
+    odataGet('ZI_CDG_PROJECT_CDS','ZI_CDG_PROJECT'),
+    odataGet('ZI_CDG_ALLOCATION_CDS','ZI_CDG_ALLOCATION'),
+    odataGet('ZI_CDG_POOL_LEDGER_CDS','ZI_CDG_POOL_LEDGER')
+  ]);
+  const shaped = mapToDataShape(proj, alloc, pool);
+  if(!shaped.project || !shaped.project.projectId) throw new Error('no project row');
+  return shaped;
+}
+
+/* Portfolio live read: one call per service, grouped by ProjectId into the map.
+   ZI_CDG_PROJECT returns ALL projects, so no new view is needed. */
+async function resolveLivePortfolio(){
+  const [projRows, allocRows, poolRows] = await Promise.all([
+    odataGet('ZI_CDG_PROJECT_CDS','ZI_CDG_PROJECT'),
+    odataGet('ZI_CDG_ALLOCATION_CDS','ZI_CDG_ALLOCATION'),
+    odataGet('ZI_CDG_POOL_LEDGER_CDS','ZI_CDG_POOL_LEDGER')
+  ]);
+  const map={};
+  projRows.forEach(pr=>{
+    const pid=pr.ProjectId;
+    const a=allocRows.filter(r=>r.ProjectId===pid);
+    const pl=poolRows.filter(r=>r.ProjectId===pid);
+    const shaped=mapToDataShape([pr], a, pl);
+    map[pid]=shaped;
+  });
+  if(!Object.keys(map).length) throw new Error('no projects');
+  return map;
+}
+
+// DATA is set when a project is opened (openProject). Persist writes back to the selected project.
+function persist(){ if(LIVE||!selectedProjectId) return; try{ PORTFOLIO[selectedProjectId]=DATA; localStorage.setItem('hostmgr_'+selectedProjectId, JSON.stringify(DATA)); }catch(e){} }
+
+let sortKey='sharePct', sortDir=-1;
+
+/* ---- helpers ---- */
+function fmtDate(d){ if(!d) return '—'; const [y,m,day]=d.split('-'); return new Date(y,m-1,day).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function money(v){ return '$'+(v==null?0:v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function currentPool(){ const jun=DATA.periods.find(p=>p.period===DATA.project.currentPeriod); return jun&&jun.pool!=null?jun.pool:null; }
+/* Roster dollars reflect the latest POSTED (settled) period — the one a back-office user reviews.
+   The open current period stays blank until its pool is entered (the live allocation moment). */
+function latestPostedPeriod(){ const posted=DATA.periods.filter(p=>p.status==='posted'&&p.pool!=null); return posted.length?posted[posted.length-1]:null; }
+function displayPeriod(){ const lp=latestPostedPeriod(); return lp?lp.period:DATA.project.currentPeriod; }
+function displayPeriodPool(){ const lp=latestPostedPeriod(); return lp?lp.pool+adjNet(lp):null; }
+function subCredit(s){ const pool=displayPeriodPool(); if(pool==null||s.status!=='active') return null; return +(pool*s.sharePct/100).toFixed(2); }
+function isEligible(cat){ return DATA.project.eligibleRateCategories.includes(cat); }
+
+/* ---- Period-aware allocation (roster period selector + subscriber history) ---- */
+let selectedPeriod = null;  // null => latest posted (default)
+function periodKeyList(){ return DATA.periods.map(p=>p.period); }
+function periodByLabel(lbl){ return DATA.periods.find(p=>p.period===lbl); }
+function effectivePeriod(){ return selectedPeriod || displayPeriod(); }
+function poolOfPeriod(lbl){ const p=periodByLabel(lbl); if(!p||p.pool==null) return null; return p.pool+adjNet(p); }
+// period label -> comparable YYYYMM for effective-date gating
+function periodToYM(lbl){ const M={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; const [mo,y]=lbl.split(' '); return y+ (M[mo]||'01'); }
+function dateToYM(d){ if(!d) return null; return d.slice(0,7).replace('-',''); }
+// was subscriber active during this period? (enrolled on/before, not dropped before)
+function activeInPeriod(s, lbl){
+  const pym=periodToYM(lbl);
+  const fromYM=dateToYM(s.effectiveFrom);
+  const toYM=dateToYM(s.effectiveTo);
+  if(fromYM && fromYM>pym) return false;         // not yet enrolled
+  if(toYM && toYM<pym) return false;             // dropped before this period
+  if(s.status==='pending' && fromYM && fromYM>pym) return false;
+  return s.status!=='pending' || (fromYM && fromYM<=pym);
+}
+function subCreditForPeriod(s, lbl){
+  const pool=poolOfPeriod(lbl);
+  if(pool==null) return null;                    // period not settled/entered
+  if(!activeInPeriod(s,lbl)) return null;        // not active then -> no credit
+  return +(pool*s.sharePct/100).toFixed(2);
+}
+
+/* ---- Account lookup (stub for ZI_CDG_ACCT_LOOKUP; pre-staged mock now) ----
+   Enter CA or installation -> returns master-data attributes from "S/4".
+   LIVE: swap body for OData GET on ZI_CDG_ACCT_LOOKUP?$filter=ContractAccount eq '<key>'
+   (or Installation eq ...). Shape below mirrors that view's expected result. */
+const ACCT_LOOKUP_MOCK = {
+  // pre-staged new subscriber to enroll in the demo (change freely later)
+  'US00003336': {ContractAccount:'US00003336',BusinessPartner:'US00003336',Installation:'USA0003336',
+    SubscriberName:'Northport Community Church',ServiceAddress:'55 Ocean Ave',City:'Northport',State:'NY',PostalCode:'11768',
+    RateCategory:'SMALL_COMM',RateSchedule:'EL-COM-SC-02'}
+};
+function acctFromExistingSubscriber(key){
+  const s=DATA.subscribers.find(x=>x.bp===key||x.ca===key||x.anlage===key);
+  if(!s) return null;
+  const parts=(s.address||'').split(',').map(t=>t.trim());
+  return {ContractAccount:s.ca||s.bp,BusinessPartner:s.bp,Installation:s.anlage,
+    SubscriberName:s.name,ServiceAddress:parts[0]||s.address,City:parts[1]||'',State:parts[2]||'NY',PostalCode:parts[3]||'',
+    RateCategory:s.rateCategory,RateSchedule:({RES_TIER:'EL-RES-TIER-01',RES_TOU:'EL-RES-TOU-D',SMALL_COMM:'EL-COM-SC-02',COMM_DEMAND:'EL-COM-DEM-LV'}[s.rateCategory]||'')};
+}
+async function lookupAccount(key){
+  key=(key||'').trim().toUpperCase();
+  if(!key) return null;
+  // 1) already on the roster? (edit path / entering an existing CA)
+  const existing=acctFromExistingSubscriber(key); if(existing) return existing;
+  // 2) pre-staged mock account
+  if(ACCT_LOOKUP_MOCK[key]) return ACCT_LOOKUP_MOCK[key];
+  // 3) LIVE: return await odataGet('ZI_CDG_ACCT_LOOKUP_CDS', "ZI_CDG_ACCT_LOOKUP?$filter=ContractAccount eq '"+key+"'")...
+  // Demo fallback: derive installation by alpha-swap so any 33nn account resolves for the demo.
+  if(/^US000\d{5}$/.test(key)){
+    return {ContractAccount:key,BusinessPartner:key,Installation:key.slice(0,2)+'A'+key.slice(3),
+      SubscriberName:'(enter name)',ServiceAddress:'(enter address)',City:'',State:'NY',PostalCode:'',
+      RateCategory:'SMALL_COMM',RateSchedule:'EL-COM-SC-02'};
+  }
+  return null;
+}
+
+/* ---- Pending-sync tracking (in-session edits that would commit to S/4) ---- */
+function markPending(bp){ const s=DATA.subscribers.find(x=>x.bp===bp); if(s){ s._pendingSync=true; } }
+function allocatedTotalPct(){ return DATA.subscribers.filter(s=>s.status==='active').reduce((a,s)=>a+s.sharePct,0); }
+// Project-level allocated % is the truth (312 subscribers), roster shows a sample.
+// available = 100 - project allocatedPct. Edits draw this down live.
+function projectAllocatedPct(){ return DATA.project.allocatedPct; }
+function projectAvailablePct(){ return +(100 - DATA.project.allocatedPct).toFixed(4); }
+
+/* ---- Project bar ---- */
+function renderProject(){
+  const p=DATA.project;
+  document.getElementById('projName').textContent=p.name;
+  document.getElementById('projHost').textContent=p.hostName;
+  document.getElementById('projId').textContent=p.projectId+' · Host '+p.hostBp;
+  document.getElementById('projCap').textContent=p.allocableCapacityKw.toLocaleString()+' kW';
+  const ml=p.model==='kwh_net_energy'?'kWh Net Energy Credit':'Value Stack — Net Crediting';
+  document.getElementById('projModel').textContent=ml;
+  document.getElementById('modelText').textContent=ml;
+  document.getElementById('projElig').textContent=p.eligibleRateCategories.map(c=>CAT_SHORT[c]).join(' · ');
+  const anchorPct=p.anchorSharePct, subPct=+(p.allocatedPct-anchorPct).toFixed(1), availPct=+(100-p.allocatedPct).toFixed(1);
+  document.getElementById('segAnchor').style.width=anchorPct+'%';
+  document.getElementById('segSub').style.width=subPct+'%';
+  document.getElementById('lgAnchor').textContent=anchorPct.toFixed(1)+'%';
+  document.getElementById('lgSub').textContent=subPct.toFixed(1)+'%';
+  document.getElementById('lgAvail').textContent=availPct.toFixed(1)+'%';
+  document.getElementById('kpiSubs').textContent=p.subscriberCount.toLocaleString();
+  document.getElementById('kpiAlloc').textContent=p.allocatedPct.toFixed(1)+'%';
+  document.getElementById('kpiAvail').textContent=availPct.toFixed(1)+'%';
+  document.getElementById('kpiAnchor').textContent=p.anchorName;
+  const dpool=displayPeriodPool();
+  document.getElementById('kpiCredited').textContent = dpool!=null ? money(+(dpool*p.allocatedPct/100).toFixed(2)) : 'Pool not entered';
+  document.getElementById('kpiCredited').style.color = dpool!=null?'var(--pos)':'var(--txt3)';
+  const kcl=document.querySelector('#kpiCredited').parentElement.querySelector('.kl');
+  if(kcl) kcl.textContent='Credited · '+displayPeriod();
+}
+
+/* ---- Roster ---- */
+function catTag(cat){
+  const elig=isEligible(cat);
+  return `<span class="cat${elig?'':' flag'}">${elig?'':'<span class="si-warn"></span>'}${RATE_LABELS[cat]}</span>`;
+}
+function statusObj(s){
+  if(s==='active') return '<span class="objstat os-pos"><span class="os-dot"></span>Active</span>';
+  if(s==='pending') return '<span class="objstat os-warn"><span class="os-dot"></span>Pending</span>';
+  return '<span class="objstat os-neu"><span class="os-dot"></span>Dropped</span>';
+}
+function filteredSubs(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const fs=document.getElementById('fStatus').value, fc=document.getElementById('fCat').value;
+  let rows=DATA.subscribers.filter(s=>{
+    if(fs!=='all'&&s.status!==fs) return false;
+    if(fc!=='all'&&s.rateCategory!==fc) return false;
+    if(q&&!(s.name.toLowerCase().includes(q)||s.bp.toLowerCase().includes(q)||s.address.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let x,y;
+    if(sortKey==='installation'){ x=instFromBp(a.bp); y=instFromBp(b.bp); }
+    else if(sortKey==='creditPeriod'){ x=subCreditForPeriod(a,effectivePeriod())||0; y=subCreditForPeriod(b,effectivePeriod())||0; }
+    else if(sortKey==='anchor'){ x=a.anchor?1:0; y=b.anchor?1:0; }
+    else { x=a[sortKey]; y=b[sortKey]; }
+    if(typeof x==='string'){ x=x.toLowerCase(); y=(y||'').toLowerCase(); }
+    if(x<y) return -sortDir; if(x>y) return sortDir; return 0;
+  });
+  return rows;
+}
+function renderRoster(){
+  const rows=filteredSubs();
+  const per=effectivePeriod();
+  const ch=document.getElementById('creditColHdr'); if(ch) ch.innerHTML='Credit · '+per+' <span class="sortarr"></span>';
+  // sync column visible only in live mode
+  const syncHdr=document.getElementById('syncColHdr'); if(syncHdr) syncHdr.style.display = LIVE ? '' : 'none';
+  document.getElementById('tbody').innerHTML=rows.map(s=>{
+    const cr=subCreditForPeriod(s, per);
+    const crCell = cr==null ? '<span class="credit zero">—</span>' : '<span class="credit">'+money(cr)+'</span>';
+    const syncCell = LIVE ? ('<td>'+(s._pendingSync
+        ? '<span class="sync-pending"><span class="sdot"></span>Pending</span>'
+        : '<span class="sync-synced">✓ Synced</span>')+'</td>') : '';
+    return `<tr onclick="openSub('${s.bp}')">
+      <td><span class="mono-id">${s.bp}</span></td>
+      <td><span class="mono-id">${s.anlage||instFromBp(s.bp)}</span></td>
+      <td><span class="sub-name">${s.name}</span></td>
+      <td><span class="addr">${s.address}</span></td>
+      <td>${catTag(s.rateCategory)}</td>
+      <td class="num">${s.sharePct.toFixed(2)}%</td>
+      <td class="num">${crCell}</td>
+      <td>${s.anchor?'<span class="role-anchor"><span class="si-anchor"></span>Anchor</span>':'<span class="role-none">—</span>'}</td>
+      <td>${statusObj(s.status)}</td>
+      ${syncCell}
+    </tr>`;}).join('');
+  document.getElementById('rowCount').innerHTML='Showing <b>'+rows.length+'</b> of <b>'+DATA.project.subscriberCount.toLocaleString()+'</b> subscribers';
+  document.getElementById('tabRosterCount').textContent=DATA.project.subscriberCount.toLocaleString();
+  renderPager(rows.length);
+  document.querySelectorAll('#panel-roster thead th').forEach(th=>{
+    th.classList.toggle('sorted',th.dataset.sort===sortKey);
+    const a=th.querySelector('.sortarr'); if(a) a.textContent = th.dataset.sort===sortKey?(sortDir===1?'▲':'▼'):(th.dataset.sort?'↕':'');
+  });
+}
+
+/* ---- Roster pager (visual — reflects full project population) ----
+   The roster shows the maintained sample; the pager reflects the full subscriber
+   count so the table reads as a real paged dataset. Page 1 holds the visible rows;
+   later pages are the rest of the population (not fetched in the demo).
+   LIVE: wire onclick -> OData $skip/$top against ZI_CDG_ALLOCATION for real paging. */
+let rosterRowsPerPage = 12;
+function renderPager(visibleCount){
+  const el=document.getElementById('rosterPager'); if(!el) return;
+  const total=DATA.project.subscriberCount||visibleCount;
+  const per=rosterRowsPerPage;
+  const pages=Math.max(1, Math.ceil(total/per));
+  const rangeEnd=Math.min(per, visibleCount, total);
+  const rangeText=total>0 ? ('1–'+rangeEnd+' of '+total.toLocaleString()) : '0 of 0';
+  // page-number buttons: 1 2 3 … last  (page 1 active)
+  let nums='';
+  const show=[];
+  show.push(1);
+  if(pages>=2) show.push(2);
+  if(pages>=3) show.push(3);
+  if(pages>4) show.push('…');
+  if(pages>3) show.push(pages);
+  show.forEach(n=>{
+    if(n==='…'){ nums+='<span class="pg-ellipsis">…</span>'; return; }
+    nums+='<button class="pg-btn'+(n===1?' active':'')+'" onclick="gotoPage('+n+')"'+(n===1?' aria-current="page"':'')+'>'+n+'</button>';
+  });
+  el.innerHTML=
+    '<div class="pg-left">'+
+      '<label>Rows</label>'+
+      '<select class="pg-rows" onchange="setRowsPerPage(this.value)">'+
+        [12,25,50,100].map(v=>'<option value="'+v+'"'+(v===per?' selected':'')+'>'+v+'</option>').join('')+
+      '</select>'+
+      '<span class="pg-range">'+rangeText+'</span>'+
+    '</div>'+
+    '<div class="pg-nav">'+
+      '<button class="pg-btn" onclick="gotoPage(1)" disabled aria-label="First page">«</button>'+
+      '<button class="pg-btn" onclick="gotoPage(1)" disabled aria-label="Previous page">‹</button>'+
+      nums+
+      '<button class="pg-btn" onclick="gotoPage(2)" aria-label="Next page">›</button>'+
+      '<button class="pg-btn" onclick="gotoPage('+pages+')" aria-label="Last page">»</button>'+
+    '</div>';
+}
+function setRowsPerPage(v){ rosterRowsPerPage=parseInt(v,10)||12; renderRoster(); }
+function gotoPage(n){
+  // Demo: the maintained sample lives on page 1. Later pages are the rest of the
+  // population, not fetched here. Keep page 1 rendered; no-op for later pages so the
+  // control looks live without needing data that isn't maintained.
+  if(n===1) renderRoster();
+  // LIVE: fetch OData with $skip=(n-1)*rosterRowsPerPage & $top=rosterRowsPerPage, then re-render.
+}
+
+/* ---- Period selector ---- */
+function initPeriodSelector(){
+  const sel=document.getElementById('fPeriod'); if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=DATA.periods.map(p=>{
+    const posted=p.pool!=null;
+    return '<option value="'+p.period+'"'+(posted?'':' disabled')+'>'+p.period+(posted?'':' (open)')+'</option>';
+  }).join('');
+  // default to latest posted
+  const def=displayPeriod();
+  sel.value = (cur && DATA.periods.some(p=>p.period===cur && p.pool!=null)) ? cur : def;
+  selectedPeriod = sel.value;
+  sel.onchange=function(){ selectedPeriod=this.value; renderRoster(); };
+}
+
+/* ---- Pool Ledger ---- */
+function periodCredited(p){ return p.pool==null?null:+(p.pool*DATA.project.allocatedPct/100).toFixed(2); }
+function periodResidual(p){ return p.pool==null?null:+(p.pool-periodCredited(p)).toFixed(2); }
+function adjNet(p){ return (p.adjustments||[]).reduce((a,x)=>a+x.delta,0); }
+
+function renderPool(){
+  const ps=DATA.periods;
+  const isKwh = DATA.project.model==='kwh_net_energy';
+  const unitFmt = v => isKwh ? (v==null?'—':(v.toLocaleString('en-US',{maximumFractionDigits:0})+' kWh')) : money(v);
+  const valueWord = isKwh ? 'kWh' : 'Pool';
+  const posted=ps.filter(p=>p.status==='posted');
+  const totalPool=posted.reduce((a,p)=>a+(p.pool||0)+adjNet(p),0);
+  const totalCredited=posted.reduce((a,p)=>a+(periodCredited(p)||0),0);
+  const openP=ps.find(p=>p.status==='open');
+  document.getElementById('poolSummary').innerHTML=`
+    <div class="ps"><div class="psl">Posted Periods</div><div class="psv">${posted.length}</div></div>
+    <div class="ps"><div class="psl">${isKwh?'kWh Settled (YTD)':'Pool Settled (YTD)'}</div><div class="psv btp">${unitFmt(totalPool)}</div></div>
+    <div class="ps"><div class="psl">Credited to Subscribers (YTD)</div><div class="psv pos">${unitFmt(totalCredited)}</div></div>
+    <div class="ps"><div class="psl">Current Period</div><div class="psv" style="font-size:15px">${openP?openP.period+' · Open':'—'}</div></div>`;
+  document.getElementById('poolBody').innerHTML=ps.map(p=>{
+    const cr=periodCredited(p), res=periodResidual(p), net=adjNet(p);
+    const poolCell = p.pool==null ? '<span class="enter-dash">awaiting settlement</span>' : unitFmt(p.pool);
+    // Mod 3: status reflects the FI-CA posting. Posted => FI-CA doc reference; open => no host-CA posting yet.
+    // (Read from the Z-table/period object; messaged as FI-CA-derived. Live path derives from fica_doc presence.)
+    let statusCell;
+    if(p.status==='posted'){
+      const doc = p.ficaDoc ? ' · doc '+p.ficaDoc : '';
+      statusCell='<span class="objstat os-pos"><span class="os-dot"></span>Posted</span>'+(p.ficaDoc?'<div class="fica-ref">FI-CA'+doc+'</div>':'');
+    } else if(p.status==='allocated'){
+      statusCell='<span class="objstat os-info"><span class="os-dot"></span>Allocated</span>';
+    } else {
+      statusCell='<span class="objstat os-warn"><span class="os-dot"></span>Open</span><div class="fica-ref">awaiting payment-lot posting</div>';
+    }
+    let action;
+    if(p.status==='open') action='<button class="btn-open" onclick="openPoolEntry(\''+p.period+'\')"><span class="si-add"></span> Record Settled '+valueWord+'</button>';
+    else action='<button class="btn-adj" onclick="openAdjust(\''+p.period+'\')"><span class="si-edit"></span> Adjust</button>';
+    const adjLine = net!==0 ? '<div class="adj-mini"><span class="si-warn"></span> '+(net>0?'+':'')+unitFmt(net)+' adjustment on record</div>' : '';
+    return `<tr style="cursor:default">
+      <td><b>${p.period}</b>${adjLine}</td>
+      <td class="num">${poolCell}${net!==0?'<div style="font-size:10px;color:var(--txt3)">net '+unitFmt(p.pool+net)+'</div>':''}</td>
+      <td class="num">${cr==null?'—':unitFmt(cr)}</td>
+      <td class="num">${res==null?'—':unitFmt(res)}</td>
+      <td class="num">${p.status==='open'?'—':DATA.project.subscriberCount.toLocaleString()}</td>
+      <td>${statusCell}</td>
+      <td><span class="addr">${p.runDate?fmtDate(p.runDate):'—'}</span></td>
+      <td style="text-align:right">${action}</td>
+    </tr>`;}).join('');
+  document.getElementById('tabPoolCount').textContent=ps.length;
+}
+
+/* ---- Tabs ---- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.panel===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
+}
+
+/* ================= DRAWER ================= */
+function setFoot(html,note){ document.getElementById('dwFoot').innerHTML=html; document.getElementById('dwFootNote').innerHTML=note||''; }
+function openDrawer(){ document.getElementById('overlay').classList.add('open'); document.getElementById('drawer').classList.add('open'); }
+function closeDrawer(){ document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDrawer(); });
+
+/* ---- Subscriber detail ---- */
+function openSub(bp){
+  const s=DATA.subscribers.find(x=>x.bp===bp); if(!s) return;
+  const anlage=s.anlage||instFromBp(s.bp);
+  document.getElementById('dwIcon').className='si-cust';
+  document.getElementById('dwName').textContent=s.name;
+  document.getElementById('dwBp').textContent=s.bp+' · '+DATA.project.projectId;
+  const elig=isEligible(s.rateCategory);
+  // per-subscriber allocation history across posted periods
+  const hist=DATA.periods.filter(p=>p.pool!=null).map(p=>{
+    const c=subCreditForPeriod(s,p.period);
+    return '<div class="ah"><span class="ap">'+p.period+'</span><span class="av'+(c==null?' zero':'')+'">'+(c==null?'—':money(c))+'</span></div>';
+  }).join('') || '<div class="ah"><span class="ap" style="font-style:italic">No settled periods yet</span></div>';
+  document.getElementById('dwBody').innerHTML=`
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-cust"></span> Subscriber</div>
+      <div class="dr"><span class="l">Service Address</span><span class="v" style="max-width:250px">${s.address}</span></div>
+      <div class="dr"><span class="l">Business Partner</span><span class="v mono">${s.bp}</span></div>
+      <div class="dr"><span class="l">Contract Account</span><span class="v mono">${s.ca||s.bp}</span></div>
+      <div class="dr"><span class="l">Installation</span><span class="v mono">${anlage}</span></div>
+    </div>
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-tags"></span> Program Membership <span class="owned">◆ Host Manager</span></div>
+      <div class="dr"><span class="l">CDG Participation</span><span class="v">${s.status==='dropped'?'<span class="objstat os-neu"><span class="os-dot"></span>Off</span>':'<span class="objstat os-pos"><span class="os-dot"></span>On (CDG-FLAG)</span>'}</span></div>
+      <div class="dr"><span class="l">Allocation Share (CDG-SHARE)</span><span class="v mono">${s.sharePct.toFixed(4)}%</span></div>
+      <div class="dr"><span class="l">Role</span><span class="v">${s.anchor?'Anchor satellite':'Subscriber'}</span></div>
+      <div class="dr"><span class="l">Status</span><span class="v">${statusObj(s.status)}</span></div>
+      <div class="dr"><span class="l">Effective From</span><span class="v">${fmtDate(s.effectiveFrom)}</span></div>
+      <div class="dr"><span class="l">Effective To</span><span class="v">${s.effectiveTo?fmtDate(s.effectiveTo):'Open'}</span></div>
+      ${s._pendingSync&&LIVE?'<div class="locknote" style="color:var(--warn)"><span class="si-warn"></span> In-session change — staged to commit CDG-FLAG / CDG-SHARE facts to the installation.</div>':''}
+    </div>
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-money"></span> Billing Determination <span class="lockedtag"><span class="si-lock"></span> IS-U owned</span></div>
+      <div class="dr lockrow"><span class="l"><span class="si-lock" style="font-size:10px"></span> Rate Category</span><span class="v">${RATE_LABELS[s.rateCategory]}${elig?'':' ⚠'}</span></div>
+      <div class="dr lockrow"><span class="l"><span class="si-lock" style="font-size:10px"></span> Rate Schedule</span><span class="v mono">${RATE_SCHEDULE[s.rateCategory]||'—'}</span></div>
+      ${elig?'':'<div class="locknote" style="color:var(--warn)"><span class="si-warn"></span> Rate category is outside this project\'s eligible list. Eligibility is read to gate enrollment; it is never edited here.</div>'}
+      <div class="locknote"><span class="si-lock"></span> Managed by IS-U rate assignment — the Host Manager reads these to gate eligibility, but can never change how a customer is billed.</div>
+    </div>
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-chart"></span> Monthly Allocation History <span class="lockedtag">read-only</span></div>
+      <div class="alloc-hist">${hist}</div>
+      <div class="locknote"><span class="si-cal"></span> Each month's credit = this subscriber's CDG-SHARE × the settled pool, gated by enrollment dates. Written as dated CDG-SMAC facts by the allocation run.</div>
+    </div>`;
+  setFoot('<button class="btn danger" onclick="openDropSubscriber(\''+s.bp+'\')">Drop</button><button class="btn primary" onclick="openEditSubscriber(\''+s.bp+'\')">Edit Membership</button>', '');
+  openDrawer();
+}
+
+/* ================= ADD / EDIT / DROP MEMBERSHIP ================= */
+let editCtx = null;  // { mode:'add'|'edit', bp, acct, oldShare, oldAnchor }
+
+function nextPeriodBoundary(){
+  // default effective date = first of next month
+  const now=new Date(); const d=new Date(now.getFullYear(), now.getMonth()+1, 1);
+  return d.toISOString().slice(0,10);
+}
+function existingAnchor(){ return DATA.subscribers.find(s=>s.anchor && s.status!=='dropped'); }
+
+/* ---- ADD ---- */
+function openAddSubscriber(){
+  editCtx={mode:'add', bp:null, acct:null, oldShare:0, oldAnchor:false};
+  document.getElementById('dwIcon').className='si-add';
+  document.getElementById('dwName').textContent='Add Subscriber';
+  document.getElementById('dwBp').textContent='Enroll new · '+DATA.project.projectId;
+  document.getElementById('dwBody').innerHTML=`
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-cust"></span> Look Up Account <span class="owned">◆ ZI_CDG_ACCT_LOOKUP</span></div>
+      <div class="lookup-row">
+        <div class="fld"><label>Contract Account or Installation</label>
+          <input type="text" id="lookupKey" class="mono" placeholder="US00003336 or USA0003336" oninput="clearHydrate()"></div>
+        <button class="lookup-btn" onclick="doLookup()">Look Up</button>
+      </div>
+      <div class="fld" style="margin-top:6px"><div class="vmsg" id="lookupMsg"></div></div>
+      <div id="hydrateBox"></div>
+    </div>
+    <div id="membershipForm" style="display:none"></div>`;
+  setFoot('<button class="btn" onclick="closeDrawer()">Cancel</button><button class="btn primary" id="commitBtn" onclick="commitMembership()" disabled>Enroll Subscriber</button>',
+          'Enter an account to pull master data from S/4, then set the allocation.');
+  openDrawer();
+}
+function clearHydrate(){
+  document.getElementById('hydrateBox').innerHTML='';
+  document.getElementById('membershipForm').style.display='none';
+  document.getElementById('lookupMsg').className='vmsg';
+  document.getElementById('commitBtn').disabled=true;
+  editCtx.acct=null;
+}
+async function doLookup(){
+  const key=document.getElementById('lookupKey').value;
+  const msg=document.getElementById('lookupMsg');
+  const acct=await lookupAccount(key);
+  if(!acct){ msg.className='vmsg err'; msg.textContent='No account found for '+key+'.'; return; }
+  // already enrolled?
+  const already=DATA.subscribers.find(s=>(s.bp===acct.BusinessPartner||s.ca===acct.ContractAccount)&&s.status!=='dropped');
+  if(already){ msg.className='vmsg warn'; msg.textContent='This account is already an active subscriber. Use Edit from the roster.'; return; }
+  editCtx.acct=acct;
+  msg.className='vmsg ok'; msg.textContent='Account found — master data pulled from S/4.';
+  const elig=isEligible(acct.RateCategory);
+  document.getElementById('hydrateBox').innerHTML=`
+    <div class="hydrated">
+      <div class="htitle"><span class="si-cust"></span> Pulled from S/4 (read-only)</div>
+      <div class="hr"><span class="hl">Name</span><span class="hv">${acct.SubscriberName}</span></div>
+      <div class="hr"><span class="hl">Service Address</span><span class="hv">${[acct.ServiceAddress,acct.City,acct.State,acct.PostalCode].filter(Boolean).join(', ')}</span></div>
+      <div class="hr"><span class="hl">Contract Account</span><span class="hv mono">${acct.ContractAccount}</span></div>
+      <div class="hr"><span class="hl">Installation</span><span class="hv mono">${acct.Installation}</span></div>
+      <div class="hr"><span class="hl">Rate Category</span><span class="hv">${RATE_LABELS[acct.RateCategory]||acct.RateCategory} ${elig?'<span style="color:var(--pos)">✓ eligible</span>':'<span style="color:var(--warn)">⚠ not eligible</span>'}</span></div>
+    </div>`;
+  document.getElementById('membershipForm').style.display='block';
+  document.getElementById('membershipForm').innerHTML=membershipFormHtml({sharePct:'',anchor:false,eff:nextPeriodBoundary()});
+  wireMembershipInputs();
+  validateMembership();
+}
+
+/* ---- EDIT ---- */
+function openEditSubscriber(bp){
+  const s=DATA.subscribers.find(x=>x.bp===bp); if(!s) return;
+  editCtx={mode:'edit', bp:bp, acct:{BusinessPartner:s.bp,ContractAccount:s.ca||s.bp,Installation:s.anlage||instFromBp(s.bp),SubscriberName:s.name,RateCategory:s.rateCategory}, oldShare:s.sharePct, oldAnchor:s.anchor};
+  document.getElementById('dwIcon').className='si-edit';
+  document.getElementById('dwName').textContent='Edit Membership';
+  document.getElementById('dwBp').textContent=s.name+' · '+s.bp;
+  const elig=isEligible(s.rateCategory);
+  document.getElementById('dwBody').innerHTML=`
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-cust"></span> Subscriber <span class="lockedtag">from S/4</span></div>
+      <div class="hydrated" style="background:var(--bg2);border-color:var(--bdr-lt)">
+        <div class="hr"><span class="hl">Name</span><span class="hv">${s.name}</span></div>
+        <div class="hr"><span class="hl">Installation</span><span class="hv mono">${s.anlage||instFromBp(s.bp)}</span></div>
+        <div class="hr"><span class="hl">Rate Category</span><span class="hv">${RATE_LABELS[s.rateCategory]} ${elig?'<span style="color:var(--pos)">✓ eligible</span>':'<span style="color:var(--warn)">⚠</span>'}</span></div>
+      </div>
+    </div>
+    <div id="membershipForm"></div>`;
+  document.getElementById('membershipForm').innerHTML=membershipFormHtml({sharePct:s.sharePct,anchor:s.anchor,eff:s.effectiveFrom||nextPeriodBoundary()});
+  setFoot('<button class="btn" onclick="openSub(\''+bp+'\')">Cancel</button><button class="btn primary" id="commitBtn" onclick="commitMembership()">Save Changes</button>','');
+  wireMembershipInputs();
+  validateMembership();
+  openDrawer();
+}
+
+/* ---- shared membership form ---- */
+function membershipFormHtml(v){
+  const anchorTaken=existingAnchor() && !(editCtx.mode==='edit'&&editCtx.oldAnchor);
+  return `
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-tags"></span> Allocation <span class="owned">◆ Host Manager</span></div>
+      <div class="fld">
+        <label>Allocation Share % (CDG-SHARE)</label>
+        <input type="text" class="money" id="mShare" value="${v.sharePct===''?'':(+v.sharePct).toFixed(4)}" placeholder="0.0000" inputmode="decimal">
+        <div class="vmsg" id="shareMsg"></div>
+      </div>
+      <div class="cap-bar" id="capBar"></div>
+      <div class="cap-legend"><span id="capUsed">—</span><span id="capAvail">—</span></div>
+      <div class="toggle-row">
+        <label class="switch"><input type="checkbox" id="mAnchor" ${v.anchor?'checked':''} ${anchorTaken?'disabled':''}><span class="slider"></span></label>
+        <span class="tlabel">Anchor satellite (CDG-ANCHOR)</span>
+      </div>
+      <div class="vmsg" id="anchorMsg">${anchorTaken?'<span class="warn">Project already has an anchor: '+existingAnchor().name+'</span>':''}</div>
+      <div class="fld" style="margin-top:10px">
+        <label>Effective Date (CDG-SHARE fact valid-from)</label>
+        <input type="date" id="mEff" value="${v.eff}">
+        <div class="hint">The period this allocation takes effect. Defaults to next period boundary.</div>
+      </div>
+      <div class="commit-preview" id="commitPreview"></div>
+    </div>`;
+}
+function wireMembershipInputs(){
+  ['mShare','mAnchor','mEff'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('input',validateMembership); el.addEventListener('change',validateMembership); } });
+}
+
+/* ---- the four live validations ---- */
+function validateMembership(){
+  const acct=editCtx.acct; if(!acct) return;
+  const shareEl=document.getElementById('mShare');
+  const share=parseFloat((shareEl.value||'').replace(/[^0-9.]/g,''));
+  const anchor=document.getElementById('mAnchor').checked;
+  const eff=document.getElementById('mEff').value;
+  const shareMsg=document.getElementById('shareMsg');
+  const preview=document.getElementById('commitPreview');
+  let ok=true;
+
+  // (1) capacity guard — project-level allocated %, minus this sub's old share if editing
+  const base = projectAllocatedPct() - (editCtx.mode==='edit'?editCtx.oldShare:0);
+  const proposed = base + (isNaN(share)?0:share);
+  const avail = +(100 - base).toFixed(4);
+  const usedPct=Math.min(base,100), newPct=Math.max(0,Math.min(isNaN(share)?0:share,100-base)), overPct=Math.max(0,proposed-100);
+  document.getElementById('capBar').innerHTML=
+    '<div class="cap-used" style="width:'+usedPct+'%"></div>'+
+    '<div class="cap-new" style="width:'+newPct+'%"></div>'+
+    (overPct>0?'<div class="cap-over" style="width:'+Math.min(overPct,100)+'%"></div>':'');
+  document.getElementById('capUsed').innerHTML='Allocated: <b>'+proposed.toFixed(4)+'%</b>';
+  document.getElementById('capAvail').innerHTML = overPct>0
+    ? '<span class="over">over by '+overPct.toFixed(4)+'%</span>'
+    : 'Available: <b>'+(100-proposed).toFixed(4)+'%</b>';
+
+  if(isNaN(share)||share<=0){ shareMsg.className='vmsg err'; shareMsg.textContent='Enter a share greater than 0.'; shareEl.classList.add('invalid'); ok=false; }
+  else if(proposed>100+1e-9){ shareMsg.className='vmsg err'; shareMsg.textContent='Exceeds available capacity by '+overPct.toFixed(4)+'%.'; shareEl.classList.add('invalid'); ok=false; }
+  else { shareMsg.className='vmsg ok'; shareMsg.textContent='Within available capacity.'; shareEl.classList.remove('invalid'); }
+
+  // (2) one anchor per project
+  const anchorTaken=existingAnchor() && !(editCtx.mode==='edit'&&editCtx.oldAnchor);
+  if(anchor && anchorTaken){ ok=false; }
+
+  // (3) rate-category eligibility (read-to-gate)
+  const elig=isEligible(acct.RateCategory);
+  if(!elig){ ok=false; }
+
+  // (4) effective date present
+  if(!eff){ ok=false; }
+
+  // commit preview names the installation facts (the S/4 proof point)
+  if(ok){
+    preview.innerHTML='<div class="cp-t">On commit — writes to installation</div>'+
+      'Sets <code>CDG-FLAG</code> = ON and <code>CDG-SHARE</code> = <code>'+share.toFixed(4)+'%</code> on installation <code>'+acct.Installation+'</code>'+(anchor?' with <code>CDG-ANCHOR</code>':'')+', effective <code>'+eff+'</code>.';
+  } else {
+    preview.innerHTML='<div class="cp-t">On commit</div>Resolve the flags above to enable commit.';
+  }
+  const btn=document.getElementById('commitBtn'); if(btn) btn.disabled=!ok;
+  return ok;
+}
+
+/* ---- commit (overlay-wins; localStorage; pending-sync in live mode) ---- */
+function commitMembership(){
+  if(!validateMembership()) return;
+  const acct=editCtx.acct;
+  const share=+parseFloat(document.getElementById('mShare').value.replace(/[^0-9.]/g,'')).toFixed(4);
+  const anchor=document.getElementById('mAnchor').checked;
+  const eff=document.getElementById('mEff').value;
+  // TODO(LIVE WRITE): commit CDG-FLAG + CDG-SHARE dated facts to installation via RAP behavior /
+  //   OData action on ZI_CDG_ALLOCATION (needs behavior definition). Demo persists overlay locally.
+  if(editCtx.mode==='add'){
+    const parts=[acct.ServiceAddress,acct.City,acct.State,acct.PostalCode].filter(Boolean).join(', ');
+    DATA.subscribers.push({ bp:acct.BusinessPartner, ca:acct.ContractAccount, anlage:acct.Installation,
+      name:acct.SubscriberName, address:parts, rateCategory:acct.RateCategory,
+      sharePct:share, anchor:anchor, status:'active', effectiveFrom:eff, effectiveTo:null,
+      _pendingSync:LIVE?true:undefined });
+    DATA.project.subscriberCount += 1;
+  } else {
+    const s=DATA.subscribers.find(x=>x.bp===editCtx.bp);
+    s.sharePct=share; s.anchor=anchor; s.effectiveFrom=eff;
+    if(LIVE) s._pendingSync=true;
+  }
+  // keep project allocated % coherent with the change (delta on the sample edit)
+  const delta = share - (editCtx.mode==='edit'?editCtx.oldShare:0);
+  DATA.project.allocatedPct = +Math.min(100, DATA.project.allocatedPct + delta).toFixed(4);
+  if(anchor){ DATA.project.anchorName=acct.SubscriberName; DATA.project.anchorSharePct=share; }
+  persist(); closeDrawer(); renderProject(); renderRoster(); renderPool(); initPeriodSelector();
+}
+
+/* ---- DROP / terminate ---- */
+function openDropSubscriber(bp){
+  const s=DATA.subscribers.find(x=>x.bp===bp); if(!s) return;
+  editCtx={mode:'drop', bp:bp};
+  document.getElementById('dwIcon').className='si-warn';
+  document.getElementById('dwName').textContent='Drop Subscriber';
+  document.getElementById('dwBp').textContent=s.name+' · '+s.bp;
+  document.getElementById('dwBody').innerHTML=`
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-warn"></span> Terminate Participation</div>
+      <div class="dr"><span class="l">Subscriber</span><span class="v">${s.name}</span></div>
+      <div class="dr"><span class="l">Installation</span><span class="v mono">${s.anlage||instFromBp(s.bp)}</span></div>
+      <div class="dr"><span class="l">Current Share</span><span class="v mono">${s.sharePct.toFixed(4)}%</span></div>
+      <div class="fld" style="margin-top:12px">
+        <label>Termination Effective Date</label>
+        <input type="date" id="dropEff" value="${nextPeriodBoundary()}">
+        <div class="hint">Share returns to available capacity from this date.</div>
+      </div>
+      <div class="commit-preview">
+        <div class="cp-t">On commit — writes to installation</div>
+        Sets <code>CDG-FLAG</code> = OFF and end-dates <code>CDG-SHARE</code> (→ 0) on installation <code>${s.anlage||instFromBp(s.bp)}</code>. Frees <code>${s.sharePct.toFixed(4)}%</code> back to the project.
+      </div>
+    </div>`;
+  setFoot('<button class="btn" onclick="openSub(\''+bp+'\')">Cancel</button><button class="btn danger" onclick="commitDrop()">Confirm Drop</button>','A dropped subscriber is end-dated, never deleted — the historical record stays.');
+  openDrawer();
+}
+function commitDrop(){
+  const s=DATA.subscribers.find(x=>x.bp===editCtx.bp); if(!s) return;
+  const eff=document.getElementById('dropEff').value;
+  // TODO(LIVE WRITE): set CDG-FLAG off + end-date CDG-SHARE fact on installation via RAP/OData action.
+  const freed=s.sharePct;
+  s.status='dropped'; s.effectiveTo=eff;
+  if(s.anchor){ s.anchor=false; DATA.project.anchorName='—'; DATA.project.anchorSharePct=0; }
+  if(LIVE) s._pendingSync=true;
+  DATA.project.allocatedPct=+Math.max(0, DATA.project.allocatedPct - freed).toFixed(4);
+  persist(); closeDrawer(); renderProject(); renderRoster(); renderPool(); initPeriodSelector();
+}
+
+/* ---- Pool: record settled value (open period) ----
+   MODEL B: the money posts to FI-CA via a PAYMENT LOT / FICA UPLOAD (back office /
+   scheduled job), NOT by this app. This action is a demo staging affordance that moves
+   a period open->posted so the allocation is visible; it does not post accounting.
+   The Host Manager is program maintenance (roster + CDG-SHARE/CDG-FLAG facts) plus
+   read/reconcile of the pool that FI-CA posted. */
+function openPoolEntry(period){
+  const p=DATA.periods.find(x=>x.period===period); if(!p) return;
+  const isKwh = DATA.project.model==='kwh_net_energy';
+  const valueWord = isKwh ? 'kWh' : 'Pool';
+  const unitLabel = isKwh ? 'kWh' : 'USD';
+  const feedName = isKwh ? 'generation / net-energy settlement' : 'Value Stack / VDER settlement';
+  const channel = isKwh ? 'net-energy settlement interface' : 'payment lot / FICA upload';
+  document.getElementById('dwIcon').className='si-ledger';
+  document.getElementById('dwName').textContent='Record Settled '+valueWord;
+  document.getElementById('dwBp').textContent=period+' · '+DATA.project.projectId;
+  document.getElementById('dwBody').innerHTML=`
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-ledger"></span> Settled ${isKwh?'kWh':'Value Stack Pool'} <span class="owned">◆ Settlement feed</span></div>
+      <div class="fld">
+        <label>Settled ${isKwh?'kWh':'pool'} for ${period} (${unitLabel})</label>
+        <input type="text" class="money" id="poolInput" placeholder="${isKwh?'0':'0.00'}" oninput="reconLive()" inputmode="decimal">
+        <div class="hint">Received from the upstream ${feedName}. SAP receives this figure — it does not compute it.</div>
+      </div>
+      <div class="recon-box" id="reconBox">
+        <div class="rr"><span class="rl">Allocated share (project)</span><span class="rv">${DATA.project.allocatedPct.toFixed(1)}%</span></div>
+        <div class="rr"><span class="rl">Subscribers</span><span class="rv">${DATA.project.subscriberCount.toLocaleString()}</span></div>
+        <div class="rr"><span class="rl">Residual (undistributed)</span><span class="rv" id="reconRes">—</span></div>
+        <div class="rr tot"><span class="rl">Credited to subscribers</span><span class="rv" id="reconCredit">—</span></div>
+      </div>
+      <div class="commit-preview" id="poolPreview"><div class="cp-t">Reconciliation</div>Enter the settled ${isKwh?'kWh':'pool'} to preview the allocation.</div>
+      <div class="locknote"><span class="si-lock"></span> ${isKwh
+        ? 'The settled kWh posts to FI-CA via the <b>net-energy settlement interface</b>; the allocation run banks kWh to subscriber installations by CDG-SHARE. This app maintains the shares and reads the result — it does not post.'
+        : 'The settled pool posts to the host contract account via a <b>payment lot / FICA upload</b> (back office); the FI-CA allocation run slices it by CDG-SHARE. This app maintains the program (roster + shares) and reads/reconciles the posted pool — it does not post the accounting document.'}</div>
+    </div>`;
+  setFoot('<button class="btn" onclick="closeDrawer()">Cancel</button><button class="btn primary" id="poolConfirm" onclick="confirmPool(\''+period+'\')" disabled>Record for Period</button>',
+          'Demo: records the settled figure so the allocation is visible. In production it lands via the '+channel+'.');
+  openDrawer();
+}
+function reconLive(){
+  const isKwh = DATA.project.model==='kwh_net_energy';
+  const fmt = v => isKwh ? (v.toLocaleString('en-US',{maximumFractionDigits:0})+' kWh') : money(v);
+  const v=parseFloat((document.getElementById('poolInput').value||'').replace(/[^0-9.]/g,''));
+  const ok=!isNaN(v)&&v>0;
+  document.getElementById('poolConfirm').disabled=!ok;
+  const prev=document.getElementById('poolPreview');
+  if(!ok){ document.getElementById('reconRes').textContent='—'; document.getElementById('reconCredit').textContent='—';
+    if(prev) prev.innerHTML='<div class="cp-t">Reconciliation</div>Enter the settled '+(isKwh?'kWh':'pool')+' to preview the allocation.'; return; }
+  const credited=+(v*DATA.project.allocatedPct/100).toFixed(isKwh?0:2);
+  document.getElementById('reconRes').textContent=fmt(+(v-credited).toFixed(isKwh?0:2));
+  document.getElementById('reconCredit').textContent=fmt(credited);
+  if(prev){
+    prev.innerHTML = isKwh
+      ? '<div class="cp-t">Posts via settlement interface</div>Settled <code>'+fmt(v)+'</code> banks to subscriber installations by CDG-SHARE via the net-energy settlement interface. The allocation run executes; this app reads the result.'
+      : '<div class="cp-t">Posts via payment lot / FICA upload</div>Settled pool <code>'+money(v)+'</code> posts to host CA <code>'+DATA.project.hostBp+'</code> via a payment lot; the FI-CA allocation run slices it by CDG-SHARE. This app maintains the shares and reconciles — it does not post.';
+  }
+}
+function confirmPool(period){
+  const isKwh = DATA.project.model==='kwh_net_energy';
+  const v=parseFloat((document.getElementById('poolInput').value||'').replace(/[^0-9.]/g,''));
+  if(isNaN(v)||v<=0) return;
+  const p=DATA.periods.find(x=>x.period===period);
+  // MODEL B: production posting lands via payment lot / FICA upload (not this app).
+  //   This demo action stages the settled figure so the period reads posted and the
+  //   allocation is visible. On a real posted period, p.ficaDoc holds the FI-CA doc
+  //   number captured from the payment-lot posting, and the ledger reads $ from DFKKOP.
+  p.pool=+v.toFixed(isKwh?0:2); p.status='posted'; p.runDate=new Date().toISOString().slice(0,10);
+  persist(); closeDrawer(); renderProject(); renderPool(); renderRoster();
+  switchTab('pool');
+}
+
+/* ---- Pool: adjust (posted period — never overwrite) ---- */
+function openAdjust(period){
+  const p=DATA.periods.find(x=>x.period===period); if(!p) return;
+  document.getElementById('dwIcon').className='si-edit';
+  document.getElementById('dwName').textContent='Adjust Period';
+  document.getElementById('dwBp').textContent=period+' · '+DATA.project.projectId;
+  const net=adjNet(p);
+  const adjRows=(p.adjustments||[]).map(a=>`<div class="dr"><span class="l">${fmtDate(a.date)} · ${a.reason}</span><span class="v mono">${a.delta>0?'+':''}${money(a.delta)}</span></div>`).join('') || '<div class="dr"><span class="l" style="font-style:italic">No adjustments on record</span></div>';
+  document.getElementById('dwBody').innerHTML=`
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-lock"></span> Posted Period — Corrections Only <span class="lockedtag"><span class="si-lock"></span> No overwrite</span></div>
+      <div class="dr lockrow"><span class="l">Original settled pool</span><span class="v mono">${money(p.pool)}</span></div>
+      <div class="dr"><span class="l">Adjustments on record</span><span class="v mono">${net>0?'+':''}${money(net)}</span></div>
+      <div class="dr"><span class="l">Net pool</span><span class="v mono">${money(p.pool+net)}</span></div>
+      <div class="locknote"><span class="si-lock"></span> A posted period is never rewritten. Corrections post as dated, reason-coded adjustment deltas — the original figure stays on the record and the audit trail is preserved.</div>
+    </div>
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-ledger"></span> Adjustment History</div>
+      ${adjRows}
+    </div>
+    <div class="dw-sec">
+      <div class="dw-sec-t"><span class="si-add"></span> New Adjustment</div>
+      <div class="fld"><label>Adjustment amount (USD, +/−)</label><input type="text" class="money" id="adjAmt" placeholder="e.g. -250.00 or 500.00" oninput="adjLive()" inputmode="decimal"></div>
+      <div class="fld"><label>Reason code</label>
+        <select id="adjReason">
+          <option value="Settlement true-up">Settlement true-up</option>
+          <option value="VDER re-statement">VDER re-statement</option>
+          <option value="Roster correction">Roster correction</option>
+          <option value="Meter/read correction">Meter/read correction</option>
+          <option value="Other (documented)">Other (documented)</option>
+        </select>
+      </div>
+      <div class="recon-box"><div class="rr tot"><span class="rl">Net pool after adjustment</span><span class="rv" id="adjNet">${money(p.pool+net)}</span></div></div>
+    </div>`;
+  setFoot('<button class="btn" onclick="closeDrawer()">Cancel</button><button class="btn primary" id="adjConfirm" onclick="confirmAdjust(\''+period+'\')" disabled>Post Adjustment</button>',
+          'Adjustments are dated, reason-coded, and logged — the original posting is never changed');
+  openDrawer();
+}
+function adjLive(){
+  const p=DATA.periods.find(x=>x.period===document.getElementById('dwBp').textContent.split(' · ')[0]);
+  const v=parseFloat((document.getElementById('adjAmt').value||'').replace(/[^0-9.\-]/g,''));
+  const ok=!isNaN(v)&&v!==0;
+  document.getElementById('adjConfirm').disabled=!ok;
+  const base=p.pool+adjNet(p);
+  document.getElementById('adjNet').textContent=money(ok?+(base+v).toFixed(2):base);
+}
+function confirmAdjust(period){
+  const p=DATA.periods.find(x=>x.period===period);
+  const v=parseFloat((document.getElementById('adjAmt').value||'').replace(/[^0-9.\-]/g,''));
+  if(isNaN(v)||v===0) return;
+  const reason=document.getElementById('adjReason').value;
+  p.adjustments=p.adjustments||[];
+  p.adjustments.push({date:new Date().toISOString().slice(0,10),delta:+v.toFixed(2),reason:reason});
+  persist(); closeDrawer(); renderPool();
+}
+
+/* ---- Sorting ---- */
+document.querySelectorAll('#panel-roster thead th[data-sort]').forEach(th=>{
+  th.addEventListener('click',()=>{ const k=th.dataset.sort; if(sortKey===k){sortDir*=-1;} else {sortKey=k;sortDir=(k==='sharePct'||k==='creditPeriod')?-1:1;} renderRoster(); });
+});
+
+/* ---- Embedded mode ---- */
+if(P.get('embedded')==='1'){
+  document.querySelector('.hdr').style.display='none';
+  document.querySelector('.int-footer').style.display='none';
+  document.body.style.paddingBottom='0';
+}
+
+/* ================= PORTFOLIO / SHELL NAVIGATION ================= */
+function projList(){ return Object.values(PORTFOLIO).map(x=>x.project); }
+function projAttention(pd){
+  // returns {flag:bool, text}
+  const openP=(pd.periods||[]).find(p=>p.status==='open');
+  if(openP) return {flag:true, text:openP.period+' pool not entered'};
+  if(pd.project.allocatedPct>100) return {flag:true, text:'Over-allocated'};
+  const pend=(pd.subscribers||[]).some(s=>s._pendingSync);
+  if(pend) return {flag:true, text:'Pending sync'};
+  return {flag:false, text:'—'};
+}
+function latestPostedOf(pd){ const p=(pd.periods||[]).filter(x=>x.status==='posted'&&x.pool!=null); return p.length?p[p.length-1]:null; }
+
+function renderPortfolioKpis(){
+  const all=Object.values(PORTFOLIO);
+  const projects=all.length;
+  const subs=all.reduce((a,x)=>a+(x.project.subscriberCount||0),0);
+  const cap=all.reduce((a,x)=>a+(x.project.allocableCapacityKw||0),0);
+  // credited this period = sum of latest-posted credited across $ projects (net_crediting only)
+  let credited=0;
+  all.forEach(x=>{ if(x.project.model==='net_crediting'){ const lp=latestPostedOf(x); if(lp) credited+=lp.pool*(x.project.allocatedPct/100); } });
+  const attention=all.filter(x=>projAttention(x).flag).length;
+  document.getElementById('pfKpis').innerHTML=`
+    <div class="pk"><div class="pkv">${projects}</div><div class="pkl">Projects</div></div>
+    <div class="pk"><div class="pkv">${subs.toLocaleString()}</div><div class="pkl">Total Subscribers</div></div>
+    <div class="pk"><div class="pkv">${cap.toLocaleString()} kW</div><div class="pkl">Allocable Capacity</div></div>
+    <div class="pk"><div class="pkv pos">${money(credited)}</div><div class="pkl">Credited · Latest Posted</div></div>
+    <div class="pk"><div class="pkv ${attention?'warn':''}">${attention}</div><div class="pkl">Need Attention</div></div>`;
+}
+function renderPortfolio(){
+  renderPortfolioKpis();
+  const q=(document.getElementById('pfSearch').value||'').trim().toLowerCase();
+  const seg=document.getElementById('pfSeg').value;
+  const typeEl=document.getElementById('pfType'); const ptype=typeEl?typeEl.value:'all';
+  let rows=Object.values(PORTFOLIO).filter(x=>{
+    if(seg!=='all'&&x.project.segment!==seg) return false;
+    if(ptype!=='all'&&programTypeCode(x)!==ptype) return false;
+    if(q&&!((x.project.name||'').toLowerCase().includes(q)||(x.project.hostName||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+  // attention-first, then allocated desc
+  rows.sort((a,b)=>{ const fa=projAttention(a).flag?1:0, fb=projAttention(b).flag?1:0; if(fa!==fb) return fb-fa; return b.project.allocatedPct-a.project.allocatedPct; });
+  document.getElementById('pfBody').innerHTML=rows.map(x=>{
+    const p=x.project, att=projAttention(x);
+    const openP=(x.periods||[]).find(pp=>pp.status==='open');
+    const settleModel = p.model==='kwh_net_energy'?'kWh Banking':'Net Crediting';
+    const ptLabel = programTypeLabel(p.programType, p.model);
+    const alloc=p.allocatedPct;
+    return `<tr onclick="openProject('${p.projectId}')">
+      <td><span class="pf-projname">${p.name}</span><div class="pf-projid">${p.projectId}</div></td>
+      <td><span class="addr">${p.hostName}</span></td>
+      <td><span class="seg-tag">${({IOU:'IOU',MUNI:'Muni',COOP:'Co-op',PUBLIC:'Public'}[p.segment]||p.segment)}</span></td>
+      <td><span class="prog-tag">${ptLabel}</span></td>
+      <td><span class="addr">${settleModel}</span></td>
+      <td class="num">${(p.allocableCapacityKw||0).toLocaleString()} kW</td>
+      <td class="num"><span class="mini-bar"><span class="mini-fill${alloc>90?' high':''}" style="width:${Math.min(alloc,100)}%"></span></span>${alloc.toFixed(1)}%</td>
+      <td class="num">${(p.subscriberCount||0).toLocaleString()}</td>
+      <td>${openP?'<span class="objstat os-warn"><span class="os-dot"></span>'+openP.period+' open</span>':'<span class="objstat os-pos"><span class="os-dot"></span>Current posted</span>'}</td>
+      <td>${att.flag?'<span class="att-flag"><span class="si-warn"></span>'+att.text+'</span>':'<span class="att-none">—</span>'}</td>
+    </tr>`;}).join('');
+  document.getElementById('pfCount').innerHTML='<b>'+rows.length+'</b> project'+(rows.length===1?'':'s');
+}
+
+function showPortfolio(){
+  document.getElementById('portfolioView').style.display='block';
+  document.getElementById('managerView').style.display='none';
+  document.getElementById('modelBadge').style.display='none';
+  renderPortfolio();
+}
+function goPortfolio(){ selectedProjectId=null; DATA=null; history.replaceState(null,'',location.pathname); showPortfolio(); }
+
+function populateSwitcher(){
+  const sel=document.getElementById('projSwitch'); if(!sel) return;
+  sel.innerHTML=projList().map(p=>'<option value="'+p.projectId+'"'+(p.projectId===selectedProjectId?' selected':'')+'>'+p.name+'</option>').join('');
+}
+function openProject(pid){
+  if(!PORTFOLIO[pid]) return;
+  selectedProjectId=pid;
+  DATA=PORTFOLIO[pid];
+  if(MODEL_OVERRIDE) DATA.project.model=MODEL_OVERRIDE;
+  document.getElementById('portfolioView').style.display='none';
+  document.getElementById('managerView').style.display='block';
+  document.getElementById('modelBadge').style.display='';
+  document.getElementById('crumbProj').textContent=DATA.project.name;
+  populateSwitcher();
+  selectedPeriod=null; sortKey='sharePct'; sortDir=-1;
+  renderProject(); initPeriodSelector(); renderRoster(); renderPool();
+  try{ history.replaceState(null,'','?project='+pid); }catch(e){}
+}
+
+/* ---- Init: route to portfolio or a deep-linked project ---- */
+function boot(){
+  if(selectedProjectId && PORTFOLIO[selectedProjectId]){ openProject(selectedProjectId); }
+  else { goPortfolio(); }
+}
+
+/* ---- Live data bootstrap (?live=1) ---- */
+(function initLive(){
+  const srcEl = document.querySelector('.src');
+  if(!LIVE){ boot(); return; }
+  if(srcEl) srcEl.innerHTML = '<span class="dot" style="background:var(--warn);animation:none"></span> Connecting to S/4HANA…';
+  resolveLivePortfolio().then(pf=>{
+    if(pf && Object.keys(pf).length){ PORTFOLIO=pf; }
+    if(srcEl) srcEl.innerHTML = '<span class="dot"></span> S/4HANA · Live (OData)';
+    boot();
+  }).catch(err=>{
+    console.warn('Live OData unavailable, using mock portfolio:', err);
+    if(srcEl) srcEl.innerHTML = '<span class="dot" style="background:var(--crit);animation:none"></span> Live unavailable · mock data';
+    boot();
+  });
+})();
+</script>
+</body>
+</html>
